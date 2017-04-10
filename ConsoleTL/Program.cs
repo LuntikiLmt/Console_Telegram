@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,21 +20,23 @@ namespace ConsoleTL
 
             var service = ioc.Resolve<IServiceTL>();
 
-            string ownPhoneNumber = "+79111111111";
-            string recipientPhoneNumber = "+79111111112";
+            string ownPhoneNumber = "79538909739"; //свой номер
+            string recipientPhoneNumber = "79538909318"; //номер получателя
             string message = "Hello";
             try
             {
-                service.Connect().Wait();
+                service.Connect(ownPhoneNumber).Wait();
             }
             catch (AggregateException ex)
             {
                 Console.WriteLine("Connection error");
                 Console.WriteLine(ex.ToString());
             }
+            Console.WriteLine("Enter the code:");
+            string code = Console.ReadLine();
             try
             {
-                service.Authenticate(ownPhoneNumber).Wait();
+                service.Authenticate(code).Wait();
             }
             catch (AggregateException ex)
             {
@@ -53,34 +56,38 @@ namespace ConsoleTL
     }
     public interface IServiceTL
     {
-        Task Connect();
-        Task Authenticate(string phoneNumber);
+        Task Connect(string phoneNumber);
+        Task Authenticate(string code);
         Task SendMessage(string WhomPhone, string Message);
     }
 
     public class Service : IServiceTL
     {
-        private const int api_id = 123456;          //свой api_id
-        private const string api_hash = "api_hash"; //свой api_hash
+        private const int api_id = 35699;
+        private const string api_hash = "c5faabe85e286bbb3eac32df78b34517";
         private TelegramClient client;
+        public string Hash { get; set; }
+        public string Phone { get; set; }
 
         public Service()
         {
             this.client = new TelegramClient(api_id, api_hash);
         }
 
-        public async Task Connect()
+        public async Task Connect(string phoneNumber)
         {
+            Phone = phoneNumber;
             await this.client.ConnectAsync();
+            Hash = await client.SendCodeRequestAsync(phoneNumber);
         }
 
-        public async Task Authenticate(String phoneNumber)
+        public async Task Authenticate(string code)
         {
-            var hash = await client.SendCodeRequestAsync(phoneNumber);
-            var code = "12345"; // you can change code in debugger
+            
 
-            var user = await client.MakeAuthAsync(phoneNumber, hash, code);
-            var s = client.IsUserAuthorized();
+            
+
+            var user = await client.MakeAuthAsync(Phone, Hash, code);
         }
 
         public async Task SendMessage(string whomPhone, string message)
