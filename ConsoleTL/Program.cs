@@ -45,29 +45,52 @@ namespace ConsoleTL
             }
             try
             {
-                service.SendMessage(recipientPhoneNumber, message).Wait();
+                service.ShowContacts();
             }
             catch (AggregateException ex)
             {
-                Console.WriteLine("Sending message error");
+                Console.WriteLine("Get contacts error");
                 Console.WriteLine(ex.ToString());
             }
+            //try
+            //{
+            //    service.SendMessage(recipientPhoneNumber, message).Wait();
+            //}
+            //catch (AggregateException ex)
+            //{
+            //    Console.WriteLine("Sending message error");
+            //    Console.WriteLine(ex.ToString());
+            //}
+            Console.ReadKey();
         }
     }
-    public interface IServiceTL
+    public interface IServiceTL : IContacts
     {
         Task Connect(string phoneNumber);
         Task Authenticate(string code);
         Task SendMessage(string WhomPhone, string Message);
     }
-
+    public interface IConnection
+    {
+        Task Connect();
+    }
+    public interface IAuthentication
+    {
+        Task Authenticate();
+    }
+    public interface IContacts
+    {
+        IEnumerable<TLUser> Contacts { get; }
+        Task ShowContacts();
+    }
     public class Service : IServiceTL
     {
+        public IEnumerable<TLUser> Contacts { get; private set; }
         private const int api_id = 35699;
         private const string api_hash = "c5faabe85e286bbb3eac32df78b34517";
         private TelegramClient client;
-        public string Hash { get; set; }
-        public string Phone { get; set; }
+        private string phoneNumber;
+        private string hash;
 
         public Service()
         {
@@ -76,18 +99,27 @@ namespace ConsoleTL
 
         public async Task Connect(string phoneNumber)
         {
-            Phone = phoneNumber;
+            this.phoneNumber = phoneNumber;
             await this.client.ConnectAsync();
-            Hash = await client.SendCodeRequestAsync(phoneNumber);
+            this.hash = await client.SendCodeRequestAsync(phoneNumber);
         }
 
         public async Task Authenticate(string code)
         {
-            
-
-            
-
-            var user = await client.MakeAuthAsync(Phone, Hash, code);
+            var user = await client.MakeAuthAsync(phoneNumber, hash, code);
+        }
+        public async Task ShowContacts()
+        {
+            var result = await client.GetContactsAsync();
+            var users = result.users.lists
+                .Where(x => x.GetType() == typeof(TLUser))
+                .Cast<TLUser>();
+            Contacts = users;
+            Console.WriteLine("All contacts:");
+            foreach (var item in Contacts)
+            {
+                Console.WriteLine("{0} {1} {2}", item.first_name, item.last_name, item.username);
+            }
         }
 
         public async Task SendMessage(string whomPhone, string message)
@@ -99,7 +131,6 @@ namespace ConsoleTL
                 .Where(x => x.GetType() == typeof(TLUser))
                 .Cast<TLUser>()
                 .FirstOrDefault(x => x.phone == whomPhone);
-
             //send message
             await client.SendMessageAsync(new TLInputPeerUser() { user_id = user.id }, message);
         }
