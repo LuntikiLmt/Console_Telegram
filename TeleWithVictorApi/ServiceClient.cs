@@ -15,7 +15,7 @@ namespace TeleWithVictorApi
         private const string ApiHash = "c5faabe85e286bbb3eac32df78b34517";
         string ServerAddress = "149.154.167.50";
         int ServerPort = 443;
-        private ITelegramClient client;
+        private ITelegramClient _client;
 
         public IContactsService ContactServise { get; set; }
         public IDialogsService DialogsService { get ; set; }
@@ -25,8 +25,6 @@ namespace TeleWithVictorApi
         public  ServiceClient()
         {
             Authenticate().Wait();
-
-            //AuthUser().Wait();
         }
 
         private bool Validate_InputPhone(string phone)
@@ -36,16 +34,13 @@ namespace TeleWithVictorApi
                 return true;
             }
 
-            else
-            {
-                return false;
-            }
+            return false;
         }
         private async Task Authenticate()
         {
-            client = ClientFactory.BuildClient(ApiId, ApiHash, ServerAddress, ServerPort);
-            await client.ConnectAsync();
-            if (!client.IsUserAuthorized())
+            _client = ClientFactory.BuildClient(ApiId, ApiHash, ServerAddress, ServerPort);
+            await _client.ConnectAsync();
+            if (!_client.IsUserAuthorized())
             {
                 string phoneNumber = string.Empty;
                 Console.WriteLine("Input your phone number please: ");
@@ -62,22 +57,21 @@ namespace TeleWithVictorApi
                 string hash = string.Empty;
                 try
                 {
-                    hash = await client.SendCodeRequestAsync(phoneNumber);
+                    hash = await _client.SendCodeRequestAsync(phoneNumber);
                 }
                 catch (Exception e)
                 {
 
                 }
 
-                string code;
                 bool isCodeCorrect = false;
                 while (!isCodeCorrect)
                 {
-                    code = Console.ReadLine();// you can change code in debugger
+                    var code = Console.ReadLine();
                     try
                     {
-                        var user = await client.MakeAuthAsync(phoneNumber, hash, code);
-                        
+                        await _client.MakeAuthAsync(phoneNumber, hash, code);
+
                         isCodeCorrect = true;
                     }
                     catch (Exception e)
@@ -88,64 +82,6 @@ namespace TeleWithVictorApi
                 }
                 Console.WriteLine("Welcome!");
             }
-        }
-        //____________Изменение_________________
-
-        //---------------------------2_VAriant-------------------------
-        private ITelegramClient NewClient()
-        {
-            try
-            {
-                return ClientFactory.BuildClient(ApiId, ApiHash, ServerAddress, ServerPort);
-            }
-            catch (MissingApiConfigurationException ex)
-            {
-                throw new Exception(
-                    $"Please add your API settings to the `appsettings.json` file. (More info: {MissingApiConfigurationException.InfoUrl})",
-                    ex);
-            }
-        }
-        public virtual async Task AuthUser()
-        {
-            var client = NewClient();
-
-            try
-            {
-                await client.ConnectAsync();
-            }
-            catch (Exception e)
-            {
-                var s = e.ToString();
-            }
-
-            var hash = await client.SendCodeRequestAsync("79538909318");
-            var code = Console.ReadLine();  // you can change code in debugger too
-
-            if (string.IsNullOrWhiteSpace(code))
-                throw new Exception(
-                    "CodeToAuthenticate is empty in the appsettings.json file, fill it with the code you just got now by SMS/Telegram");
-
-            TlUser user;
-            try
-            {
-                user = await client.MakeAuthAsync("79538909318", hash, code);
-            }
-            catch (CloudPasswordNeededException ex)
-            {
-                //var password = await client.GetPasswordSetting();
-                //var passwordStr = PasswordToAuthenticate;
-
-                //user = await client.MakeAuthWithPasswordAsync(password, passwordStr);
-            }
-            catch (InvalidPhoneCodeException ex)
-            {
-                throw new Exception(
-                    "CodeToAuthenticate is wrong in the appsettings.json file, fill it with the code you just got now by SMS/Telegram",
-                    ex);
-            }
-            //Assert.NotNull(user);
-            //Assert.True(client.IsUserAuthorized());
-            Console.WriteLine("fwefwfwefe");
         }
     }
 }
