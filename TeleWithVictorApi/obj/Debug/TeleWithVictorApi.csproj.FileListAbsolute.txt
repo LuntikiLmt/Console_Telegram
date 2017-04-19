@@ -20,3 +20,6 @@ c:\users\dmitrii\documents\visual studio 2017\Projects\TeleWithVictorApi\TeleWit
 c:\users\dmitrii\documents\visual studio 2017\Projects\TeleWithVictorApi\TeleWithVictorApi\bin\Debug\PommaLabs.Thrower.xml
 c:\users\dmitrii\documents\visual studio 2017\Projects\TeleWithVictorApi\TeleWithVictorApi\obj\Debug\TeleWithVictorApi.exe
 c:\users\dmitrii\documents\visual studio 2017\Projects\TeleWithVictorApi\TeleWithVictorApi\obj\Debug\TeleWithVictorApi.pdb
+C:\Users\talni\Source\Repos\Console_Telegram2\Console_Telegram\TeleWithVictorApi\bin\Debug\TeleWithVictorApi.exe.config
+C:\Users\talni\Source\Repos\Console_Telegram2\Console_Telegram\TeleWithVictorApi\obj\Debug\TeleWithVictorApi.exe
+C:\Users\talni\Source\Repos\Console_Telegram2\Console_Telegram\TeleWithVictorApi\obj\Debug\TeleWithVictorApi.pdb

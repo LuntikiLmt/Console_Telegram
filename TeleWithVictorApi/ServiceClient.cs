@@ -89,7 +89,7 @@ namespace TeleWithVictorApi
                 Console.WriteLine("Welcome!");
             }
         }
-
+        //____________Изменение_________________
 
         //---------------------------2_VAriant-------------------------
         private ITelegramClient NewClient()
