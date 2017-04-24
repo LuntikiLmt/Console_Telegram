@@ -11,6 +11,8 @@ namespace TeleWithVictorApi
         string FirstName { get; set; }
         string LastName { get; set; }
         string PhoneNumber { get; }
+
+        void FillValues(string firstName, string lastName, string phone);
     }
     public interface IMessage
     {
@@ -27,29 +29,31 @@ namespace TeleWithVictorApi
     public interface IContactsService
     {
         IEnumerable<IContact> Contacts { get; }
-        void FillContacts();
+        Task FillContacts();
     }
     public interface IDialogsService
     {
         IEnumerable<IDialog> Dialogs { get; }
-        void FillDialogs();
+        Task FillDialogs();
     }
    
-    public interface ISending
+    public interface ISendingService
     {
         void SendTextMessage();
         void SendFile();
     }
-    public interface IReceiving
+    public interface IReceivingService
     {
         void Receieve();
     }
 
     public interface IServiceTL
     {
-        IContactsService ContactServise { get; set; }
+        IContactsService ContactsService { get; set; }
         IDialogsService DialogsService { get; set; }
-        ISending Sending { get; set; }
-        IReceiving Receiving { get; set; }
+        ISendingService SendingService { get; set; }
+        IReceivingService ReceivingService { get; set; }
+
+        void Fill();
     }
 }

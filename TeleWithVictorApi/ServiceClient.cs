@@ -3,28 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TelegramClient.Entities.TL.Messages;
 using TelegramClient.Core;
-using TelegramClient.Core.Exceptions;
 using TelegramClient.Entities.TL;
 
 namespace TeleWithVictorApi
 {
     class ServiceClient : IServiceTL
     {
-        private const int ApiId = 35699;
-        private const string ApiHash = "c5faabe85e286bbb3eac32df78b34517";
-        string ServerAddress = "149.154.167.50";
-        int ServerPort = 443;
         private ITelegramClient _client;
+        private SimpleIoC _ioc;
 
-        public IContactsService ContactServise { get; set; }
+        public IContactsService ContactsService { get; set; }
         public IDialogsService DialogsService { get ; set; }
-        public ISending Sending { get; set; }
-        public IReceiving Receiving { get; set; }
+        public ISendingService SendingService { get; set; }
+        public IReceivingService ReceivingService { get; set; }
 
-        public  ServiceClient()
+        public ServiceClient(SimpleIoC ioc)
         {
+            _ioc = ioc;
+            _client = _ioc.Resolve<ITelegramClient>();
+
             Authenticate().Wait();
+        }
+
+        public void Fill()
+        {
+            DialogsService = _ioc.Resolve<IDialogsService>();
+            //ContactsService = _ioc.Resolve<IContactsService>();
+
+            DialogsService.FillDialogs().Wait();
+            //ContactsService.FillContacts().Wait();
         }
 
         private bool Validate_InputPhone(string phone)
@@ -38,7 +47,6 @@ namespace TeleWithVictorApi
         }
         private async Task Authenticate()
         {
-            _client = ClientFactory.BuildClient(ApiId, ApiHash, ServerAddress, ServerPort);
             await _client.ConnectAsync();
             if (!_client.IsUserAuthorized())
             {
@@ -80,8 +88,90 @@ namespace TeleWithVictorApi
                         Console.WriteLine(e.ToString());
                     }
                 }
-                Console.WriteLine("Welcome!");
+                
             }
+            Console.WriteLine("Welcome!");
+        }
+    }
+
+    class ContactsService : IContactsService
+    {
+        private ITelegramClient _client;
+        private SimpleIoC _ioc;
+
+        public IEnumerable<IContact> Contacts { get; private set; }
+
+        public ContactsService(SimpleIoC ioc)
+        {
+            _ioc = ioc;
+            _client = ioc.Resolve<ITelegramClient>();
+        }
+
+        public async Task FillContacts()
+        {
+            var cont = await _client.GetContactsAsync();
+            IEnumerable<TlUser>users = cont.Users.Lists.Cast<TlUser>();
+            List<IContact> contacts = new List<IContact>();
+            foreach (var item in users)
+            {
+                var contact = _ioc.Resolve<IContact>();
+                contact.FillValues(item.FirstName, item.LastName, item.Phone);
+                contacts.Add(contact);
+            }
+            Contacts = contacts;
+        }
+    }
+
+    class DialogsService : IDialogsService
+    {
+        public IEnumerable<IDialog> Dialogs { get; set; }
+        private ITelegramClient _client;
+
+        public DialogsService(SimpleIoC ioc)
+        {
+            _client = ioc.Resolve<ITelegramClient>();
+        }
+
+        public async Task FillDialogs()
+        {
+            var dialogs = (TlDialogs) await _client.GetUserDialogsAsync();
+        }
+    }
+    class Dialog : IDialog
+    {
+        public string DialogName { get; }
+        public IEnumerable<IMessage> Messages { get; }
+
+        public Dialog(string dialogName, IEnumerable<IMessage> messages)
+        {
+            DialogName = dialogName;
+            Messages = messages;
+        }
+    }
+    class Message : IMessage
+    {
+        public string UserName { get; }
+        public string MessageText { get; }
+        public DateTime MessageDate { get; }
+
+        public Message(string userName, string text, DateTime date)
+        {
+            UserName = userName;
+            MessageText = text;
+            MessageDate = date;
+        }
+    }
+    class Contact : IContact
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string PhoneNumber { get; private set; }
+
+        public void FillValues(string firstName, string lastName, string phone)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            PhoneNumber = phone;
         }
     }
 }
