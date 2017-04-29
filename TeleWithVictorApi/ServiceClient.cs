@@ -32,7 +32,15 @@ namespace TeleWithVictorApi
             DialogsService = _ioc.Resolve<IDialogsService>();
             //ContactsService = _ioc.Resolve<IContactsService>();
 
-            DialogsService.FillDialogs().Wait();
+            //DialogsService.FillDialog(new TlPeerChannel(), "Лаборатория .Net 2017").Wait(); 
+            //DialogsService.FillDialog(new TlPeerChat(), "Лунтики").Wait();
+            DialogsService.FillDialog(new TlPeerUser(), "АртурИванов").Wait();
+            Console.WriteLine(DialogsService.Dialog.DialogName); 
+            foreach (var item in DialogsService.Dialog.Messages)
+            {
+                Console.WriteLine(item.MessageDate + " " + item.MessageText);
+            }
+
             //ContactsService.FillContacts().Wait();
         }
 
@@ -112,6 +120,7 @@ namespace TeleWithVictorApi
             var cont = await _client.GetContactsAsync();
             IEnumerable<TlUser>users = cont.Users.Lists.Cast<TlUser>();
             List<IContact> contacts = new List<IContact>();
+            Contacts = new List<IContact>();
             foreach (var item in users)
             {
                 var contact = _ioc.Resolve<IContact>();
@@ -124,25 +133,90 @@ namespace TeleWithVictorApi
 
     class DialogsService : IDialogsService
     {
-        public IEnumerable<IDialog> Dialogs { get; set; }
+        public IDialog Dialog { get; private set; }
         private ITelegramClient _client;
+
+        private SimpleIoC _ioc;
 
         public DialogsService(SimpleIoC ioc)
         {
+            _ioc = ioc;
             _client = ioc.Resolve<ITelegramClient>();
         }
 
-        public async Task FillDialogs()
+        private DateTime TimeUnixTOWindows(Double TimestampToConvert, bool Local)
         {
+            var mdt = new DateTime(1970, 1, 1, 0, 0, 0);
+            if (Local)
+            {
+                return mdt.AddSeconds(TimestampToConvert).ToLocalTime();
+            }
+            else
+            {
+                return mdt.AddSeconds(TimestampToConvert);
+            }
+        }
+
+        private void AddMsg(TlMessage message, List<IMessage> messages)
+        {
+            var msg = _ioc.Resolve<IMessage>();
+            msg.Fill("нужно подтянуть имя из FromId из Users от history", "dede", message.Message, TimeUnixTOWindows(message.Date, true));
+            messages.Add(msg);
+        }
+
+        public async Task FillDialog(TlAbsPeer peer, string dialogName)
+        {
+            Dialog = _ioc.Resolve<IDialog>();
+            List<IMessage> messages = new List<IMessage>();
+
+            TlAbsMessages history;
+
             var dialogs = (TlDialogs) await _client.GetUserDialogsAsync();
+            if (peer is TlPeerUser)
+            {
+                var user = dialogs.Users.Lists
+                .OfType<TlUser>()
+                .FirstOrDefault(c => c.FirstName + c.LastName == dialogName);
+                history = await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = user.Id }, 0, -1, 50);
+                foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
+                {
+                    AddMsg(message, messages);
+                }
+            }
+            else
+            {
+                if (peer is TlPeerChannel)
+                {
+                    var chat = dialogs.Chats.Lists
+                    .OfType<TlChannel>()
+                    .FirstOrDefault(c => c.Title == dialogName);
+                    history = await _client.GetHistoryAsync(new TlInputPeerChannel() { ChannelId = chat.Id, AccessHash= (long)chat.AccessHash }, 0, -1, 50);
+                    foreach (TlMessage message in ((TlChannelMessages)history).Messages.Lists)
+                    {
+                        AddMsg(message, messages);
+                    }
+                }
+                else
+                {
+                    var chat = dialogs.Chats.Lists
+                    .OfType<TlChat>()
+                    .FirstOrDefault(c => c.Title == dialogName);
+                    history = await _client.GetHistoryAsync(new TlInputPeerChat() { ChatId = chat.Id }, 0, -1, 50);
+                    foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
+                    {
+                        AddMsg(message, messages);
+                    }
+                }
+            }
+            Dialog.Fill(dialogName, messages.Reverse<IMessage>());
         }
     }
     class Dialog : IDialog
     {
-        public string DialogName { get; }
-        public IEnumerable<IMessage> Messages { get; }
+        public string DialogName { get; private set; }
+        public IEnumerable<IMessage> Messages { get; private set; }
 
-        public Dialog(string dialogName, IEnumerable<IMessage> messages)
+        public void Fill(string dialogName, IEnumerable<IMessage> messages)
         {
             DialogName = dialogName;
             Messages = messages;
@@ -150,13 +224,15 @@ namespace TeleWithVictorApi
     }
     class Message : IMessage
     {
-        public string UserName { get; }
-        public string MessageText { get; }
-        public DateTime MessageDate { get; }
+        public string UserFirstName { get; private set; }
+        public string UserLastName { get; private set; }
+        public string MessageText { get; private set; }
+        public DateTime MessageDate { get; private set; }
 
-        public Message(string userName, string text, DateTime date)
+        public void Fill(string userFirstName, string userLastName, string text, DateTime date)
         {
-            UserName = userName;
+            UserFirstName = userFirstName;
+            UserLastName = userLastName;
             MessageText = text;
             MessageDate = date;
         }

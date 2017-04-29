@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TelegramClient.Entities.TL;
 
 namespace TeleWithVictorApi
 {
@@ -16,14 +17,18 @@ namespace TeleWithVictorApi
     }
     public interface IMessage
     {
-        string UserName { get; }
+        string UserFirstName { get; }
+        string UserLastName { get; }
         string MessageText { get; }
+        //МОЖЕТ ЕЩЕ быть Медиа файл!!!
         DateTime MessageDate { get; }
+        void Fill(string userFirstName, string userLastName, string text, DateTime date);
     }
     public interface IDialog
     {
         string DialogName { get; }
         IEnumerable<IMessage> Messages { get; }
+        void Fill(string dialogName, IEnumerable<IMessage> messages);
     }
     
     public interface IContactsService
@@ -33,8 +38,8 @@ namespace TeleWithVictorApi
     }
     public interface IDialogsService
     {
-        IEnumerable<IDialog> Dialogs { get; }
-        Task FillDialogs();
+        IDialog Dialog { get; }
+        Task FillDialog(TlAbsPeer peer, string dialogName);//TlAbsPeer peer - тип диалога: chat, channel, user
     }
    
     public interface ISendingService
