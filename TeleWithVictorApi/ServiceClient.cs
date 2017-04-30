@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TelegramClient.Entities.TL.Messages;
 using TelegramClient.Core;
 using TelegramClient.Entities.TL;
 
@@ -32,9 +31,9 @@ namespace TeleWithVictorApi
             DialogsService = _ioc.Resolve<IDialogsService>();
             //ContactsService = _ioc.Resolve<IContactsService>();
 
-            //DialogsService.FillDialog(new TlPeerChannel(), "Лаборатория .Net 2017").Wait(); 
+            //DialogsService.FillDialog(new TlPeerChannel(), "Лаборатория .Net 2017").Wait();
             //DialogsService.FillDialog(new TlPeerChat(), "Лунтики").Wait();
-            DialogsService.FillDialog(new TlPeerUser(), "Артур Иванов").Wait();
+            DialogsService.FillDialog("Лунтики").Wait();
             Console.WriteLine(DialogsService.Dialog.DialogName); 
             foreach (var item in DialogsService.Dialog.Messages)
             {
@@ -101,125 +100,7 @@ namespace TeleWithVictorApi
             Console.WriteLine("Welcome!");
         }
     }
-
-    class ContactsService : IContactsService
-    {
-        private ITelegramClient _client;
-        private SimpleIoC _ioc;
-
-        public IEnumerable<IContact> Contacts { get; private set; }
-
-        public ContactsService(SimpleIoC ioc)
-        {
-            _ioc = ioc;
-            _client = ioc.Resolve<ITelegramClient>();
-        }
-
-        public async Task FillContacts()
-        {
-            var cont = await _client.GetContactsAsync();
-            IEnumerable<TlUser>users = cont.Users.Lists.Cast<TlUser>();
-            List<IContact> contacts = new List<IContact>();
-            Contacts = new List<IContact>();
-            foreach (var item in users)
-            {
-                var contact = _ioc.Resolve<IContact>();
-                contact.FillValues(item.FirstName, item.LastName, item.Phone);
-                contacts.Add(contact);
-            }
-            Contacts = contacts;
-        }
-    }
-
-    class DialogsService : IDialogsService
-    {
-        public IDialog Dialog { get; private set; }
-        private ITelegramClient _client;
-
-        private SimpleIoC _ioc;
-
-        public DialogsService(SimpleIoC ioc)
-        {
-            _ioc = ioc;
-            _client = ioc.Resolve<ITelegramClient>();
-        }
-
-        private DateTime TimeUnixTOWindows(Double TimestampToConvert, bool Local)
-        {
-            var mdt = new DateTime(1970, 1, 1, 0, 0, 0);
-            if (Local)
-            {
-                return mdt.AddSeconds(TimestampToConvert).ToLocalTime();
-            }
-            else
-            {
-                return mdt.AddSeconds(TimestampToConvert);
-            }
-        }
-
-        private void AddMsg(TlMessage message, List<IMessage> messages, string firstName, string lastName)
-        {
-            var msg = _ioc.Resolve<IMessage>();
-            msg.Fill(firstName, lastName, message.Message, TimeUnixTOWindows(message.Date, true));
-            messages.Add(msg);
-        }
-
-        public async Task FillDialog(TlAbsPeer peer, string dialogName)
-        {
-            Dialog = _ioc.Resolve<IDialog>();
-            List<IMessage> messages = new List<IMessage>();
-
-            TlAbsMessages history;
-
-            var dialogs = (TlDialogs) await _client.GetUserDialogsAsync();
-            if (peer is TlPeerUser)
-            {
-                var user = dialogs.Users.Lists
-                .OfType<TlUser>()
-                .FirstOrDefault(c => c.FirstName + " " + c.LastName == dialogName);
-                history = await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = user.Id }, 0, -1, 50);
-                foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
-                {
-                    TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
-                    .OfType<TlUser>()
-                    .FirstOrDefault(c => c.Id == message.FromId);
-                    AddMsg(message, messages, userFrom.FirstName, userFrom.LastName);
-                }
-            }
-            else
-            {
-                if (peer is TlPeerChannel)
-                {
-                    var chat = dialogs.Chats.Lists
-                    .OfType<TlChannel>()
-                    .FirstOrDefault(c => c.Title == dialogName);
-                    history = await _client.GetHistoryAsync(new TlInputPeerChannel() { ChannelId = chat.Id, AccessHash= (long)chat.AccessHash }, 0, -1, 50);
-                    foreach (TlMessage message in ((TlChannelMessages)history).Messages.Lists)
-                    {
-                        TlUser userFrom = ((TlChannelMessages)history).Users.Lists
-                        .OfType<TlUser>()
-                        .FirstOrDefault(c => c.Id == message.FromId);
-                        AddMsg(message, messages, userFrom.FirstName, userFrom.LastName);
-                    }
-                }
-                else
-                {
-                    var chat = dialogs.Chats.Lists
-                    .OfType<TlChat>()
-                    .FirstOrDefault(c => c.Title == dialogName);
-                    history = await _client.GetHistoryAsync(new TlInputPeerChat() { ChatId = chat.Id }, 0, -1, 50);
-                    foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
-                    {
-                        TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
-                        .OfType<TlUser>()
-                        .FirstOrDefault(c => c.Id == message.FromId);
-                        AddMsg(message, messages, userFrom.FirstName, userFrom.LastName);
-                    }
-                }
-            }
-            Dialog.Fill(dialogName, messages.Reverse<IMessage>());
-        }
-    }
+    
     class Dialog : IDialog
     {
         public string DialogName { get; private set; }

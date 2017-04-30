@@ -36,10 +36,11 @@ namespace TeleWithVictorApi
         IEnumerable<IContact> Contacts { get; }
         Task FillContacts();
     }
+
     public interface IDialogsService
     {
         IDialog Dialog { get; }
-        Task FillDialog(TlAbsPeer peer, string dialogName);//TlAbsPeer peer - тип диалога: chat, channel, user
+        Task FillDialog(string dialogName);//TlAbsPeer peer - тип диалога: chat, channel, user
     }
    
     public interface ISendingService
