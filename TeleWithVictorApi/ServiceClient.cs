@@ -34,11 +34,11 @@ namespace TeleWithVictorApi
 
             //DialogsService.FillDialog(new TlPeerChannel(), "Лаборатория .Net 2017").Wait(); 
             //DialogsService.FillDialog(new TlPeerChat(), "Лунтики").Wait();
-            DialogsService.FillDialog(new TlPeerUser(), "АртурИванов").Wait();
+            DialogsService.FillDialog(new TlPeerUser(), "Артур Иванов").Wait();
             Console.WriteLine(DialogsService.Dialog.DialogName); 
             foreach (var item in DialogsService.Dialog.Messages)
             {
-                Console.WriteLine(item.MessageDate + " " + item.MessageText);
+                Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
             }
 
             //ContactsService.FillContacts().Wait();
@@ -157,10 +157,10 @@ namespace TeleWithVictorApi
             }
         }
 
-        private void AddMsg(TlMessage message, List<IMessage> messages)
+        private void AddMsg(TlMessage message, List<IMessage> messages, string firstName, string lastName)
         {
             var msg = _ioc.Resolve<IMessage>();
-            msg.Fill("нужно подтянуть имя из FromId из Users от history", "dede", message.Message, TimeUnixTOWindows(message.Date, true));
+            msg.Fill(firstName, lastName, message.Message, TimeUnixTOWindows(message.Date, true));
             messages.Add(msg);
         }
 
@@ -176,11 +176,14 @@ namespace TeleWithVictorApi
             {
                 var user = dialogs.Users.Lists
                 .OfType<TlUser>()
-                .FirstOrDefault(c => c.FirstName + c.LastName == dialogName);
+                .FirstOrDefault(c => c.FirstName + " " + c.LastName == dialogName);
                 history = await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = user.Id }, 0, -1, 50);
                 foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
                 {
-                    AddMsg(message, messages);
+                    TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
+                    .OfType<TlUser>()
+                    .FirstOrDefault(c => c.Id == message.FromId);
+                    AddMsg(message, messages, userFrom.FirstName, userFrom.LastName);
                 }
             }
             else
@@ -193,7 +196,10 @@ namespace TeleWithVictorApi
                     history = await _client.GetHistoryAsync(new TlInputPeerChannel() { ChannelId = chat.Id, AccessHash= (long)chat.AccessHash }, 0, -1, 50);
                     foreach (TlMessage message in ((TlChannelMessages)history).Messages.Lists)
                     {
-                        AddMsg(message, messages);
+                        TlUser userFrom = ((TlChannelMessages)history).Users.Lists
+                        .OfType<TlUser>()
+                        .FirstOrDefault(c => c.Id == message.FromId);
+                        AddMsg(message, messages, userFrom.FirstName, userFrom.LastName);
                     }
                 }
                 else
@@ -204,7 +210,10 @@ namespace TeleWithVictorApi
                     history = await _client.GetHistoryAsync(new TlInputPeerChat() { ChatId = chat.Id }, 0, -1, 50);
                     foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
                     {
-                        AddMsg(message, messages);
+                        TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
+                        .OfType<TlUser>()
+                        .FirstOrDefault(c => c.Id == message.FromId);
+                        AddMsg(message, messages, userFrom.FirstName, userFrom.LastName);
                     }
                 }
             }
