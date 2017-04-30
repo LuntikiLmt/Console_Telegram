@@ -25,7 +25,7 @@ namespace TeleWithVictorApi
             ioc.Register<IDialogShort, DialogShort>();
             #endregion
             var client = ioc.Resolve<IServiceTL>();
-            client.Fill();
+            client.Fill();//
 
             var dialogs = client.DialogsService.DialogList.ToList();
             int index;
