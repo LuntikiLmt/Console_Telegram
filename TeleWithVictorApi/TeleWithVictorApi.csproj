@@ -75,6 +75,7 @@
     <Compile Include="DialogsService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SendingService.cs" />
     <Compile Include="ServiceClient.cs" />
     <Compile Include="SimpleIoC.cs" />
   </ItemGroup>

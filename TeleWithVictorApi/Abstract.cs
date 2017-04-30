@@ -7,6 +7,8 @@ using TelegramClient.Entities.TL;
 
 namespace TeleWithVictorApi
 {
+    public enum Peer { User, Channel, Chat }
+
     public interface IContact
     {
         string FirstName { get; set; }
@@ -30,6 +32,14 @@ namespace TeleWithVictorApi
         IEnumerable<IMessage> Messages { get; }
         void Fill(string dialogName, IEnumerable<IMessage> messages);
     }
+
+    public interface IDialogShort
+    {
+        string DialogName { get; }
+        Peer Peer { get; }
+        int Id { get; }
+        void Fill(string DlName, Peer DlPeer, int DlId);
+    }
     
     public interface IContactsService
     {
@@ -40,13 +50,16 @@ namespace TeleWithVictorApi
     public interface IDialogsService
     {
         IDialog Dialog { get; }
-        Task FillDialog(string dialogName);//TlAbsPeer peer - тип диалога: chat, channel, user
+        Task FillDialog(string dialogName, Peer peer, int id);//TlAbsPeer peer - тип диалога: chat, channel, user
+
+        IEnumerable<IDialogShort> DialogList { get; }
+        Task FillDialogList();
     }
    
     public interface ISendingService
     {
-        void SendTextMessage();
-        void SendFile();
+        Task SendTextMessage(Peer peer, int id, string msg);
+        Task SendFile();
     }
     public interface IReceivingService
     {

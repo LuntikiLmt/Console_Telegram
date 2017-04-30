@@ -29,17 +29,25 @@ namespace TeleWithVictorApi
         public void Fill()
         {
             DialogsService = _ioc.Resolve<IDialogsService>();
-            //ContactsService = _ioc.Resolve<IContactsService>();
 
-            //DialogsService.FillDialog(new TlPeerChannel(), "Лаборатория .Net 2017").Wait();
-            //DialogsService.FillDialog(new TlPeerChat(), "Лунтики").Wait();
-            DialogsService.FillDialog("Лунтики").Wait();
-            Console.WriteLine(DialogsService.Dialog.DialogName); 
-            foreach (var item in DialogsService.Dialog.Messages)
+            DialogsService.FillDialogList().Wait();
+            foreach (var item in DialogsService.DialogList)
             {
-                Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+                Console.WriteLine(item.DialogName);
             }
 
+            //Console.WriteLine("Input number of a dialog");
+            //int index;//будем передавать индекс нужного диалога
+            //int.TryParse(Console.ReadLine(), out index);
+            //var dlg = DialogsService.DialogList.ToList()[index];
+            //DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id).Wait();
+            //Console.WriteLine(DialogsService.Dialog.DialogName); 
+            //foreach (var item in DialogsService.Dialog.Messages)
+            //{
+            //    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+            //}
+
+            //ContactsService = _ioc.Resolve<IContactsService>();
             //ContactsService.FillContacts().Wait();
         }
 
@@ -138,6 +146,19 @@ namespace TeleWithVictorApi
             FirstName = firstName;
             LastName = lastName;
             PhoneNumber = phone;
+        }
+    }
+    class DialogShort : IDialogShort
+    {
+        public string DialogName { get; private set; }
+        public Peer Peer { get; private set; }
+        public int Id { get; private set; }
+
+        public void Fill(string DlName, Peer DlPeer, int DlId)
+        {
+            DialogName = DlName;
+            Peer = DlPeer;
+            Id = DlId;
         }
     }
 }
