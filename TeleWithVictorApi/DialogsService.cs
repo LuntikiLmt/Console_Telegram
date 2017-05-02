@@ -27,19 +27,38 @@ namespace TeleWithVictorApi
         {
             Dialog = _ioc.Resolve<IDialog>();
             TlAbsMessages history;
+            TlAbsMessages temp;
+            int len;
 
             switch (peer)
             {
                 case Peer.User:
-                    history = (TlMessagesSlice)await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = id }, 0, -1, 50);
-                    foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
+                    history = await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = id }, 0, -1, 50);
+                    if (history is TlMessagesSlice)
                     {
-                        TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
-                        .OfType<TlUser>()
-                        .FirstOrDefault(c => c.Id == message.FromId);
-                        AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
+                        foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
+                        {
+                            TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
+                            .OfType<TlUser>()
+                            .FirstOrDefault(c => c.Id == message.FromId);
+                            AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
+                        }
                     }
+                    else
+                    {
+                        foreach (TlMessage message in ((TlMessages)history).Messages.Lists)
+                        {
+                            TlUser userFrom = ((TlMessages)history).Users.Lists
+                            .OfType<TlUser>()
+                            .FirstOrDefault(c => c.Id == message.FromId);
+                            AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
+                        }
+                    }
+                    //len = ((TlMessages) temp).Messages.Lists.Count - 1;
+                    //history = (TlMessagesSlice)await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = id }, 0, -1, len < 50 ? len: 50);
+
                     break;
+
                 case Peer.Chat:
                     history = await _client.GetHistoryAsync(new TlInputPeerChat() { ChatId = id }, 0, -1, 50);
                     foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
@@ -50,6 +69,7 @@ namespace TeleWithVictorApi
                         AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
                     }
                     break;
+
                 default:
                     var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
                     var channel = dialogs.Chats.Lists.OfType<TlChannel>().FirstOrDefault(c => c.Id == id);

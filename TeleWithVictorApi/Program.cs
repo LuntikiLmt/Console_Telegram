@@ -25,16 +25,18 @@ namespace TeleWithVictorApi
             ioc.Register<IDialogShort, DialogShort>();
             #endregion
             var client = ioc.Resolve<IServiceTL>();
-            client.Fill();//
+            var index = client.Fill();
 
             var dialogs = client.DialogsService.DialogList.ToList();
-            int index;
-            Console.WriteLine("input index to whom write: ");
-            int.TryParse(Console.ReadLine(), out index);
+            
+            Console.Write("Your text: ");
+            var text = Console.ReadLine();
             client.SendingService = ioc.Resolve<ISendingService>();
-            client.SendingService.SendTextMessage(dialogs[index].Peer, dialogs[index].Id, "Test msg");
+            client.SendingService.SendTextMessage(dialogs[index].Peer, dialogs[index].Id, text);
+            Console.WriteLine(text);
 
-            Console.ReadKey();
+            Console.WriteLine("Press any key...");
+            Console.Read();
         }
     }
 }

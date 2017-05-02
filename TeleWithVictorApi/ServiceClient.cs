@@ -26,29 +26,62 @@ namespace TeleWithVictorApi
             Authenticate().Wait();
         }
 
-        public void Fill()
+        public int Fill()
         {
             DialogsService = _ioc.Resolve<IDialogsService>();
-
+            int index = 0;//будем передавать индекс нужного диалога
             DialogsService.FillDialogList().Wait();
             foreach (var item in DialogsService.DialogList)
             {
-                Console.WriteLine(item.DialogName);
+                Console.WriteLine(index + " " + item.DialogName);
+                index++;
             }
 
-            //Console.WriteLine("Input number of a dialog");
-            //int index;//будем передавать индекс нужного диалога
-            //int.TryParse(Console.ReadLine(), out index);
-            //var dlg = DialogsService.DialogList.ToList()[index];
-            //DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id).Wait();
-            //Console.WriteLine(DialogsService.Dialog.DialogName); 
-            //foreach (var item in DialogsService.Dialog.Messages)
+            //var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
+            //var myDialogs = new List<string>();
+            //int ch = 0;
+            //foreach (var item in dialogs.Chats.Lists.OfType<TlChat>())
             //{
-            //    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+            //    Console.WriteLine(ch + " " + item.Title);
+            //    myDialogs.Add(item.Title);
+            //    ch++;
+            //}
+            //foreach (var item in dialogs.Chats.Lists.OfType<TlChannel>())
+            //{
+            //    Console.WriteLine(ch + " " + item.Title);
+            //    myDialogs.Add(item.Title);
+            //    ch++;
+            //}
+            //foreach (var item in dialogs.Users.Lists.OfType<TlUser>())
+            //{
+            //    Console.WriteLine(ch + " " + item.FirstName);
+            //    myDialogs.Add(item.FirstName);
+            //    ch++;
+            //}
+            //Console.Write("Choose number dialog: ");
+            //try
+            {
+                Console.Write("Input number of a dialog: ");
+                int.TryParse(Console.ReadLine(), out index);
+                var dlg = DialogsService.DialogList.ToList()[index];
+                DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id).Wait();
+                Console.Clear();
+                Console.WriteLine(DialogsService.Dialog.DialogName);
+                foreach (var item in DialogsService.Dialog.Messages)
+                {
+                    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+                }
+
+                ContactsService = _ioc.Resolve<IContactsService>();
+                ContactsService.FillContacts().Wait();
+            }
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine("Number is incorrect! Try again please: ");
+            //    Console.WriteLine(e.ToString());
             //}
 
-            //ContactsService = _ioc.Resolve<IContactsService>();
-            //ContactsService.FillContacts().Wait();
+            return index;
         }
 
         private bool Validate_InputPhone(string phone)

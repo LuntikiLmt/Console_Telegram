@@ -73,6 +73,6 @@ namespace TeleWithVictorApi
         ISendingService SendingService { get; set; }
         IReceivingService ReceivingService { get; set; }
 
-        void Fill();
+        int Fill();
     }
 }
