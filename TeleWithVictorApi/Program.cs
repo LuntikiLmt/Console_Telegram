@@ -28,7 +28,6 @@ namespace TeleWithVictorApi
             }
         }
 
-        // лалалала
         static async Task PrintDialogHistory(IServiceTL client)
         {
             int index;
@@ -62,6 +61,15 @@ namespace TeleWithVictorApi
             Console.WriteLine(text);
         }
 
+        static async Task SendMessageToContactByNumber(IServiceTL client, int index)
+        {
+            var contacts = client.ContactsService.Contacts.ToList();
+            Console.Write("Your text: ");
+            var text = Console.ReadLine();
+            await client.SendingService.SendTextMessage(Peer.User, contacts[index].Id, text);
+            Console.WriteLine(text);
+        }
+
         static async Task Start()
         {
             var ioc = new SimpleIoC();
@@ -82,17 +90,24 @@ namespace TeleWithVictorApi
             //var index = client.Fill();
             await client.FillAsync();
 
-            PrintDialogs(client);
+            //PrintDialogs(client);
 
-            await PrintDialogHistory(client);
+            //await PrintDialogHistory(client);
 
-            await SendMessageToDialogByNumber(client, 3);
+            //await SendMessageToDialogByNumber(client, 3);
+
+            //PrintContacts(client);
+            //await SendMessageToContactByNumber(client, 11);
+
+            PrintContacts(client);
+            await client.ContactsService.AddContact("Арчи", "АлахБабах", "79538909739");
+            PrintContacts(client);
         }
 
         static void Main(string[] args)
         {
             Start().Wait();
-
+            
             Console.ReadKey();
         }
     }

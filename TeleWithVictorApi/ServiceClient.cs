@@ -125,12 +125,14 @@ namespace TeleWithVictorApi
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string PhoneNumber { get; private set; }
+        public int Id { get; private set; }
 
-        public void FillValues(string firstName, string lastName, string phone)
+        public void FillValues(string firstName, string lastName, string phone, int id)
         {
             FirstName = firstName;
             LastName = lastName;
             PhoneNumber = phone;
+            Id = id;
         }
     }
     class DialogShort : IDialogShort

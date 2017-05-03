@@ -14,8 +14,9 @@ namespace TeleWithVictorApi
         string FirstName { get; set; }
         string LastName { get; set; }
         string PhoneNumber { get; }
+        int Id { get; }
 
-        void FillValues(string firstName, string lastName, string phone);
+        void FillValues(string firstName, string lastName, string phone, int id);
     }
     public interface IMessage
     {
@@ -45,6 +46,7 @@ namespace TeleWithVictorApi
     {
         IEnumerable<IContact> Contacts { get; }
         Task FillContacts();
+        Task AddContact(string firstName, string lastName, string phone);
     }
 
     public interface IDialogsService
