@@ -42,7 +42,14 @@ namespace TeleWithVictorApi
             }
         }
 
-
+        static async Task SendMessageToDialogByNumber(IServiceTL client, int index)
+        {
+            var dialogs = client.DialogsService.DialogList.ToList();
+            Console.Write("Your text: ");
+            var text = Console.ReadLine();
+            await client.SendingService.SendTextMessage(dialogs[index].Peer, dialogs[index].Id, text);
+            Console.WriteLine(text);
+        }
 
         static async Task Start()
         {
@@ -68,17 +75,7 @@ namespace TeleWithVictorApi
 
             await PrintDialogHistory(client);
 
-            //var dialogs = client.DialogsService.DialogList.ToList();
-
-            //Console.Write("Your text: ");
-            //var text = Console.ReadLine();
-            ////client.SendingService = ioc.Resolve<ISendingService>();
-            ////client.SendingService.SendTextMessage(dialogs[index].Peer, dialogs[index].Id, text);
-            //await client.SendingService.SendTextMessage(dialogs[0].Peer, dialogs[0].Id, text);
-            //Console.WriteLine(text);
-
-            //Console.WriteLine("Press any key...");
-            //Console.Read();
+            await SendMessageToDialogByNumber(client, 3);
         }
 
         static void Main(string[] args)
