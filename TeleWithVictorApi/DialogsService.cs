@@ -54,8 +54,6 @@ namespace TeleWithVictorApi
                             AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
                         }
                     }
-                    //len = ((TlMessages) temp).Messages.Lists.Count - 1;
-                    //history = (TlMessagesSlice)await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = id }, 0, -1, len < 50 ? len: 50);
 
                     break;
 

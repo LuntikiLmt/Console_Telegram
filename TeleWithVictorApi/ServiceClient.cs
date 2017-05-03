@@ -37,29 +37,7 @@ namespace TeleWithVictorApi
                 index++;
             }
 
-            //var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
-            //var myDialogs = new List<string>();
-            //int ch = 0;
-            //foreach (var item in dialogs.Chats.Lists.OfType<TlChat>())
-            //{
-            //    Console.WriteLine(ch + " " + item.Title);
-            //    myDialogs.Add(item.Title);
-            //    ch++;
-            //}
-            //foreach (var item in dialogs.Chats.Lists.OfType<TlChannel>())
-            //{
-            //    Console.WriteLine(ch + " " + item.Title);
-            //    myDialogs.Add(item.Title);
-            //    ch++;
-            //}
-            //foreach (var item in dialogs.Users.Lists.OfType<TlUser>())
-            //{
-            //    Console.WriteLine(ch + " " + item.FirstName);
-            //    myDialogs.Add(item.FirstName);
-            //    ch++;
-            //}
-            //Console.Write("Choose number dialog: ");
-            //try
+            try 
             {
                 Console.Write("Input number of a dialog: ");
                 int.TryParse(Console.ReadLine(), out index);
@@ -75,11 +53,12 @@ namespace TeleWithVictorApi
                 ContactsService = _ioc.Resolve<IContactsService>();
                 ContactsService.FillContacts().Wait();
             }
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine("Number is incorrect! Try again please: ");
-            //    Console.WriteLine(e.ToString());
-            //}
+            catch (Exception e)
+            {
+                Console.WriteLine("Number is incorrect! ");
+                Console.WriteLine(e.ToString());
+                return -1;
+            }
 
             return index;
         }
