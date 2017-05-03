@@ -17,7 +17,7 @@ namespace TeleWithVictorApi
                 index++;
             }
         }
-
+        // лалалала
         static async Task PrintDialogHistory(IServiceTL client)
         {
             int index;
