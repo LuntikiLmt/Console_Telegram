@@ -27,8 +27,6 @@ namespace TeleWithVictorApi
         {
             Dialog = _ioc.Resolve<IDialog>();
             TlAbsMessages history;
-            TlAbsMessages temp;
-            int len;
 
             switch (peer)
             {

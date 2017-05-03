@@ -26,41 +26,14 @@ namespace TeleWithVictorApi
             Authenticate().Wait();
         }
 
-        public int Fill()
+        public async Task FillAsync()
         {
             DialogsService = _ioc.Resolve<IDialogsService>();
-            int index = 0;//будем передавать индекс нужного диалога
-            DialogsService.FillDialogList().Wait();
-            foreach (var item in DialogsService.DialogList)
-            {
-                Console.WriteLine(index + " " + item.DialogName);
-                index++;
-            }
+            SendingService = _ioc.Resolve<ISendingService>();
+            ContactsService = _ioc.Resolve<IContactsService>();
 
-            try 
-            {
-                Console.Write("Input number of a dialog: ");
-                int.TryParse(Console.ReadLine(), out index);
-                var dlg = DialogsService.DialogList.ToList()[index];
-                DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id).Wait();
-                Console.Clear();
-                Console.WriteLine(DialogsService.Dialog.DialogName);
-                foreach (var item in DialogsService.Dialog.Messages)
-                {
-                    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
-                }
-
-                ContactsService = _ioc.Resolve<IContactsService>();
-                ContactsService.FillContacts().Wait();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Number is incorrect! ");
-                Console.WriteLine(e.ToString());
-                return -1;
-            }
-
-            return index;
+            await ContactsService.FillContacts();
+            await DialogsService.FillDialogList();
         }
 
         private bool Validate_InputPhone(string phone)

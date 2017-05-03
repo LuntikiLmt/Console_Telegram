@@ -8,7 +8,43 @@ namespace TeleWithVictorApi
 {
     class Program
     {
-        static void Main(string[] args)
+        static void PrintDialogs(IServiceTL client)
+        {
+            int index = 0;
+            foreach (var item in client.DialogsService.DialogList)
+            {
+                Console.WriteLine(index + " " + item.DialogName);
+                index++;
+            }
+        }
+
+        static async Task PrintDialogHistory(IServiceTL client)
+        {
+            int index;
+            try
+            {
+                Console.Write("Input number of a dialog: ");
+                int.TryParse(Console.ReadLine(), out index);
+                var dlg = client.DialogsService.DialogList.ToList()[index];
+                await client.DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id);
+                Console.Clear();
+                Console.WriteLine(client.DialogsService.Dialog.DialogName);
+                foreach (var item in client.DialogsService.Dialog.Messages)
+                {
+                    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Number is incorrect! ");
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+
+
+        static async Task Start()
         {
             var ioc = new SimpleIoC();
             #region RegisterIoC
@@ -25,18 +61,31 @@ namespace TeleWithVictorApi
             ioc.Register<IDialogShort, DialogShort>();
             #endregion
             var client = ioc.Resolve<IServiceTL>();
-            var index = client.Fill();
+            //var index = client.Fill();
+            await client.FillAsync();
 
-            var dialogs = client.DialogsService.DialogList.ToList();
-            
-            Console.Write("Your text: ");
-            var text = Console.ReadLine();
-            client.SendingService = ioc.Resolve<ISendingService>();
-            client.SendingService.SendTextMessage(dialogs[index].Peer, dialogs[index].Id, text);
-            Console.WriteLine(text);
+            PrintDialogs(client);
 
-            Console.WriteLine("Press any key...");
-            Console.Read();
+            await PrintDialogHistory(client);
+
+            //var dialogs = client.DialogsService.DialogList.ToList();
+
+            //Console.Write("Your text: ");
+            //var text = Console.ReadLine();
+            ////client.SendingService = ioc.Resolve<ISendingService>();
+            ////client.SendingService.SendTextMessage(dialogs[index].Peer, dialogs[index].Id, text);
+            //await client.SendingService.SendTextMessage(dialogs[0].Peer, dialogs[0].Id, text);
+            //Console.WriteLine(text);
+
+            //Console.WriteLine("Press any key...");
+            //Console.Read();
+        }
+
+        static void Main(string[] args)
+        {
+            Start().Wait();
+
+            Console.ReadKey();
         }
     }
 }
