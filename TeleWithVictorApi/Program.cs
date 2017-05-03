@@ -17,17 +17,7 @@ namespace TeleWithVictorApi
                 index++;
             }
         }
-
-        static void PrintContacts(IServiceTL client)
-        {
-            int index = 0;
-            foreach (var item in client.ContactsService.Contacts)
-            {
-                Console.WriteLine(index + " " + item.FirstName + " " + item.LastName);
-                index++;
-            }
-        }
-
+        // лалалала
         static async Task PrintDialogHistory(IServiceTL client)
         {
             int index;
