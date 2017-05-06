@@ -8,23 +8,49 @@ using System.Threading.Tasks;
 
 namespace TeleWithVictorApi
 {
-    class Options
+    interface ISendOptions
     {
-        public Options()
-        {
-            SendVerb = new SendOptions();
-        }
+        [Option('m', "message", Default = "Hello", HelpText = "Sending message", Separator = ' ')]
+        IEnumerable<string> Message { get; set; }
 
-        [VerbOption("send", HelpText = "Send message to somebody")]
-        public SendOptions SendVerb { get; set; }
+        [Value(0, HelpText = "Index in dialogs list", Required = true)]
+        int Index { get; set; }
+
+        [Option('d', "dialog", Default = false, HelpText = "Send to dialog")]
+        bool Dialog { get; set; }
+
+        [Option('c', "contact", Default = false, HelpText = "Send to contact")]
+        bool Contact { get; set; }
     }
 
-    class SendOptions
+    [Verb("send", HelpText = "Send message to somebody")]
+    class SendOptions : ISendOptions
     {
-        [Option('t', "target", Required = true, HelpText = "Receiver")]
-        public string Target { get; set; }
+        public IEnumerable<string> Message { get; set; }
+        public int Index { get; set; }
+        public bool Dialog { get; set; }
+        public bool Contact { get; set; }
+    }
 
-        [Option('m', "message", Required = true, HelpText = "Sending message")]
-        public string Message { get; set; }
+    interface IPrintOptions
+    {
+        [Option('d', "dialogs", Default = false)]
+        bool Dialogs { get; set; }
+
+        [Option('c', "contacts", Default = false)]
+        bool Contacts { get; set; }
+    }
+
+    [Verb("print", HelpText = "Print list of contacts or dialogs")]
+    class PrintOptions : IPrintOptions
+    {
+        public bool Dialogs { get; set; }
+        public bool Contacts { get; set; }
+    }
+
+    [Verb("quit", HelpText = "Leave this pretty program")]
+    class Quit
+    {
+
     }
 }
