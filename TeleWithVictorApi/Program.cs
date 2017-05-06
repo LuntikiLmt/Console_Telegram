@@ -118,7 +118,7 @@ namespace TeleWithVictorApi
                 }
             };
 
-            Action<PrintOptions> print = opt =>
+            Action<PrintOptions> print = async opt =>
             {
                 if (opt.Contacts)
                 {
@@ -128,6 +128,15 @@ namespace TeleWithVictorApi
                 {
                     PrintDialogs(client);
                 }
+                if (opt.Index != -1)
+                {
+                    await PrintDialogMessages(client, opt.Index);
+                }
+            };
+
+            Action<AddContactOptions> addContact = async opt =>
+            {
+                await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number);
             };
 
             bool isRun = true;
@@ -135,12 +144,13 @@ namespace TeleWithVictorApi
             while (isRun)
             {
                 var line = Console.ReadLine().Split(' ');
-                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, Quit>(line);
+                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, Quit>(line);
 
                 parseResult.
                     WithParsed<Quit>((quit) => isRun = false).
                     WithParsed(print).
-                    WithParsed(send);
+                    WithParsed(send).
+                    WithParsed(addContact);
             }
         }
 
@@ -161,6 +171,27 @@ namespace TeleWithVictorApi
             var contacts = client.ContactsService.Contacts;
             await client.SendingService.SendTextMessage(Peer.User, contacts.ElementAt(index).Id, text);
             Console.WriteLine(text);
+        }
+
+        static async Task PrintDialogMessages(IServiceTL client, int index)
+        {
+            try
+            {
+                var dlg = client.DialogsService.DialogList.ToList()[index];
+                await client.DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id);
+                Console.Clear();
+                Console.WriteLine(client.DialogsService.Dialog.DialogName);
+                foreach (var item in client.DialogsService.Dialog.Messages)
+                {
+                    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+                }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Number is incorrect! ");
+                Console.WriteLine(e.ToString());
+            }
         }
     }
 }
