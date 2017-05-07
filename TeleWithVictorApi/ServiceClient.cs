@@ -8,10 +8,10 @@ using TelegramClient.Entities.TL;
 
 namespace TeleWithVictorApi
 {
-    class ServiceClient : IServiceTL
+    class ServiceClient : IServiceTl
     {
-        private ITelegramClient _client;
-        private SimpleIoC _ioc;
+        private readonly ITelegramClient _client;
+        private readonly SimpleIoC _ioc;
 
         public IContactsService ContactsService { get; set; }
         public IDialogsService DialogsService { get ; set; }
@@ -21,7 +21,7 @@ namespace TeleWithVictorApi
         public ServiceClient(SimpleIoC ioc)
         {
             _ioc = ioc;
-            _client = _ioc.Resolve<ITelegramClient>();
+            _client = ioc.Resolve<ITelegramClient>();
 
             Authenticate().Wait();
         }
@@ -141,11 +141,11 @@ namespace TeleWithVictorApi
         public Peer Peer { get; private set; }
         public int Id { get; private set; }
 
-        public void Fill(string DlName, Peer DlPeer, int DlId)
+        public void Fill(string dlName, Peer dlPeer, int dlId)
         {
-            DialogName = DlName;
-            Peer = DlPeer;
-            Id = DlId;
+            DialogName = dlName;
+            Peer = dlPeer;
+            Id = dlId;
         }
     }
 }

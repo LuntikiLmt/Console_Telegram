@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TelegramClient.Core;
 using TelegramClient.Entities;
@@ -12,8 +10,8 @@ namespace TeleWithVictorApi
 {
     class ContactsService : IContactsService
     {
-        private ITelegramClient _client;
-        private SimpleIoC _ioc;
+        private readonly ITelegramClient _client;
+        private readonly SimpleIoC _ioc;
 
         public IEnumerable<IContact> Contacts { get; private set; }
 
@@ -26,10 +24,10 @@ namespace TeleWithVictorApi
         public async Task AddContact(string firstName, string lastName, string phone)
         {
             var contacts = new TlVector<TlInputPhoneContact>();
-            contacts.Lists.Add(new TlInputPhoneContact() {  FirstName = firstName, LastName = lastName, Phone = phone});
+            contacts.Lists.Add(new TlInputPhoneContact {  FirstName = firstName, LastName = lastName, Phone = phone});
 
             //Create request 
-            var req = new TlRequestImportContacts()
+            var req = new TlRequestImportContacts
             {
                 Contacts = contacts
             };

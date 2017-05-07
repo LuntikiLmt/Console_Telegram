@@ -9,7 +9,7 @@ namespace TeleWithVictorApi
 {
     class Program
     {
-        static void PrintDialogs(IServiceTL client)
+        static void PrintDialogs(IServiceTl client)
         {
             int index = 0;
             Console.WriteLine("Dialogs:");
@@ -20,7 +20,7 @@ namespace TeleWithVictorApi
             }
         }
 
-        static void PrintContacts(IServiceTL client)
+        static void PrintContacts(IServiceTl client)
         {
             int index = 0;
             Console.WriteLine("Contacts:");
@@ -31,13 +31,12 @@ namespace TeleWithVictorApi
             }
         }
 
-        static async Task PrintDialogHistory(IServiceTL client)
+        static async Task PrintDialogHistory(IServiceTl client)
         {
-            int index;
             try
             {
                 Console.Write("Input number of a dialog: ");
-                int.TryParse(Console.ReadLine(), out index);
+                int.TryParse(Console.ReadLine(), out int index);
                 var dlg = client.DialogsService.DialogList.ToList()[index];
                 await client.DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id);
                 Console.Clear();
@@ -55,7 +54,7 @@ namespace TeleWithVictorApi
             }
         }
 
-        static async Task SendMessageToDialogByNumber(IServiceTL client, int index)
+        static async Task SendMessageToDialogByNumber(IServiceTl client, int index)
         {
             var dialogs = client.DialogsService.DialogList.ToList();
             Console.Write("Your text: ");
@@ -64,7 +63,7 @@ namespace TeleWithVictorApi
             Console.WriteLine(text);
         }
 
-        static async Task SendMessageToContactByNumber(IServiceTL client, int index)
+        static async Task SendMessageToContactByNumber(IServiceTl client, int index)
         {
             var contacts = client.ContactsService.Contacts.ToList();
             Console.Write("Your text: ");
@@ -82,43 +81,41 @@ namespace TeleWithVictorApi
             ioc.Register<IDialogsService, DialogsService>();
             ioc.Register<ISendingService, SendingService>();
 
-            ioc.Register<IServiceTL, ServiceClient>();
+            ioc.Register<IServiceTl, ServiceClient>();
 
             ioc.Register<IContact, Contact>();
             ioc.Register<IDialog, Dialog>();
             ioc.Register<IMessage, Message>();
             ioc.Register<IDialogShort, DialogShort>();
             #endregion
-            var client = ioc.Resolve<IServiceTL>();
+            var client = ioc.Resolve<IServiceTl>();
             await client.FillAsync();
 
-            Action<SendOptions> send = async opt =>
+            async void Send(SendOptions opt)
             {
-                int index = opt.Index;
-                var message_array = opt.Message;
                 var builder = new StringBuilder();
-                builder.Append(message_array.First());
-                for (int i = 1; i < message_array.Count(); ++i)
+                builder.Append(opt.Message.First());
+                for (int i = 1; i < opt.Message.Count(); ++i)
                 {
                     builder.Append(' ');
-                    builder.Append(message_array.ElementAt(i));
+                    builder.Append(opt.Message.ElementAt(i));
                 }
                 var message = builder.ToString();
-                if (opt.Dialog)
+                if (opt.DialogIndex != -1)
                 {
-                    await SendMessageToDialog(client, index, message);
+                    await SendMessageToDialog(client, opt.DialogIndex, message);
                 }
-                else if (opt.Contact)
+                else if (opt.ContactIndex != -1)
                 {
-                    await SendMessageToContact(client, index, message);
+                    await SendMessageToContact(client, opt.ContactIndex, message);
                 }
                 else
                 {
                     Console.WriteLine("Add '-d' to send to dialog or '-c' to send to contact");
                 }
-            };
+            }
 
-            Action<PrintOptions> print = async opt =>
+            async void Print(PrintOptions opt)
             {
                 if (opt.Contacts)
                 {
@@ -132,25 +129,21 @@ namespace TeleWithVictorApi
                 {
                     await PrintDialogMessages(client, opt.Index);
                 }
-            };
+            }
 
-            Action<AddContactOptions> addContact = async opt =>
-            {
-                await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number);
-            };
 
             bool isRun = true;
 
             while (isRun)
             {
-                var line = Console.ReadLine().Split(' ');
+                var line = Console.ReadLine()?.Split(' ');
                 var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, Quit>(line);
 
                 parseResult.
-                    WithParsed<Quit>((quit) => isRun = false).
-                    WithParsed(print).
-                    WithParsed(send).
-                    WithParsed(addContact);
+                    WithParsed<Quit>(quit => isRun = false).
+                    WithParsed((Action<PrintOptions>) Print).
+                    WithParsed((Action<SendOptions>) Send).
+                    WithParsed<AddContactOptions>(async opt => await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number));
             }
         }
 
@@ -159,21 +152,21 @@ namespace TeleWithVictorApi
             Start().Wait();
         }
 
-        static async Task SendMessageToDialog(IServiceTL client, int index, string text)
+        static async Task SendMessageToDialog(IServiceTl client, int index, string text)
         {
             var dialogs = client.DialogsService.DialogList;
             await client.SendingService.SendTextMessage(dialogs.ElementAt(index).Peer, dialogs.ElementAt(index).Id, text);
             Console.WriteLine(text);
         }
 
-        static async Task SendMessageToContact(IServiceTL client, int index, string text)
+        static async Task SendMessageToContact(IServiceTl client, int index, string text)
         {
             var contacts = client.ContactsService.Contacts;
             await client.SendingService.SendTextMessage(Peer.User, contacts.ElementAt(index).Id, text);
             Console.WriteLine(text);
         }
 
-        static async Task PrintDialogMessages(IServiceTL client, int index)
+        static async Task PrintDialogMessages(IServiceTl client, int index)
         {
             try
             {

@@ -11,12 +11,10 @@ namespace TeleWithVictorApi
 {
     class SendingService : ISendingService
     {
-        private ITelegramClient _client;
-        private SimpleIoC _ioc;
+        private readonly ITelegramClient _client;
 
         public SendingService(SimpleIoC ioc)
         {
-            _ioc = ioc;
             _client = ioc.Resolve<ITelegramClient>();
         }
 
@@ -27,24 +25,24 @@ namespace TeleWithVictorApi
 
         public async Task SendTextMessage(Peer peer, int id, string msg)
         {
-            TlAbsInputPeer reciever;
+            TlAbsInputPeer receiver;
             switch (peer)
             {
                 case Peer.User:
-                    reciever = new TlInputPeerUser { UserId = id };
+                    receiver = new TlInputPeerUser { UserId = id };
                     break;
                 case Peer.Chat:
-                    reciever = new TlInputPeerChat { ChatId = id };
+                    receiver = new TlInputPeerChat { ChatId = id };
                     break;
                 default:
                     var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
                     var chat = dialogs.Chats.Lists
                              .OfType<TlChannel>()
                              .FirstOrDefault(c => c.Id == id);
-                    reciever = new TlInputPeerChannel { ChannelId = id, AccessHash = chat.AccessHash.Value };
+                    receiver = new TlInputPeerChannel { ChannelId = id, AccessHash = chat.AccessHash.Value };
                     break;
             }
-            await _client.SendMessageAsync(reciever, msg);
+            await _client.SendMessageAsync(receiver, msg);
         }
     }
 }

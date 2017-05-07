@@ -11,9 +11,9 @@ namespace TeleWithVictorApi
 {
     class DialogsService : IDialogsService
     {
-        private ITelegramClient _client;
-        private SimpleIoC _ioc;
-        private List<IMessage> _messages = new List<IMessage>();
+        private readonly ITelegramClient _client;
+        private readonly SimpleIoC _ioc;
+        private readonly List<IMessage> _messages = new List<IMessage>();
         public IDialog Dialog { get; private set; }
         public IEnumerable<IDialogShort> DialogList { get; private set; }
 
@@ -31,7 +31,7 @@ namespace TeleWithVictorApi
             switch (peer)
             {
                 case Peer.User:
-                    history = await _client.GetHistoryAsync(new TlInputPeerUser() { UserId = id }, 0, -1, 50);
+                    history = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = id }, 0, -1, 50);
                     if (history is TlMessagesSlice)
                     {
                         foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)

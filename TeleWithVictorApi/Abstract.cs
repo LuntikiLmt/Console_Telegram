@@ -39,7 +39,7 @@ namespace TeleWithVictorApi
         string DialogName { get; }
         Peer Peer { get; }
         int Id { get; }
-        void Fill(string DlName, Peer DlPeer, int DlId);
+        void Fill(string dlName, Peer dlPeer, int dlId);
     }
     
     public interface IContactsService
@@ -68,7 +68,7 @@ namespace TeleWithVictorApi
         void Receieve();
     }
 
-    public interface IServiceTL
+    public interface IServiceTl
     {
         IContactsService ContactsService { get; set; }
         IDialogsService DialogsService { get; set; }

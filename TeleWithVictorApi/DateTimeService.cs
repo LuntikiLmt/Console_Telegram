@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TeleWithVictorApi
 {
@@ -15,10 +11,7 @@ namespace TeleWithVictorApi
             {
                 return mdt.AddSeconds(timestampToConvert).ToLocalTime();
             }
-            else
-            {
-                return mdt.AddSeconds(timestampToConvert);
-            }
+            return mdt.AddSeconds(timestampToConvert);
         }
     }
 }
