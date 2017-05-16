@@ -31,6 +31,7 @@ namespace TeleWithVictorApi
             DialogsService = _ioc.Resolve<IDialogsService>();
             SendingService = _ioc.Resolve<ISendingService>();
             ContactsService = _ioc.Resolve<IContactsService>();
+            ReceivingService = _ioc.Resolve< IReceivingService>();
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();
@@ -90,7 +91,7 @@ namespace TeleWithVictorApi
                 }
                 
             }
-            Console.WriteLine("Welcome!");
+            Console.WriteLine("\nWelcome!");
         }
     }
     

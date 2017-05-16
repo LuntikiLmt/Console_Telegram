@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
+using TelegramClient.Core;
+using TelegramClient.Core.ApiServies;
+using TelegramClient.Entities.TL;
+using TelegramClient.Entities.TL.Updates;
 
 namespace TeleWithVictorApi
 {
@@ -76,10 +80,11 @@ namespace TeleWithVictorApi
         {
             var ioc = new SimpleIoC();
             #region RegisterIoC
-            ioc.RegisterInstance(TelegramClient.Core.ClientFactory.BuildClient(35699, "c5faabe85e286bbb3eac32df78b34517", "149.154.167.50", 443));
+            ioc.RegisterInstance(TelegramClient.Core.ClientFactory.BuildClient(35699, "c5faabe85e286bbb3eac32df78b34517", "149.154.167.40", 443));
             ioc.Register<IContactsService, ContactsService>();
             ioc.Register<IDialogsService, DialogsService>();
             ioc.Register<ISendingService, SendingService>();
+            ioc.Register<IReceivingService, ReceivingService>();
 
             ioc.Register<IServiceTl, ServiceClient>();
 
@@ -90,6 +95,7 @@ namespace TeleWithVictorApi
             #endregion
             var client = ioc.Resolve<IServiceTl>();
             await client.FillAsync();
+
 
             async void Send(SendOptions opt)
             {
@@ -131,11 +137,17 @@ namespace TeleWithVictorApi
                 }
             }
 
+            var myClient = ioc.Resolve<ITelegramClient>();
+            myClient.Updates.RecieveUpdates += async update =>
+            {
+                await client.ReceivingService.Receieve();
+            };
 
             bool isRun = true;
 
             while (isRun)
             {
+                Console.Write("\n->");
                 var line = Console.ReadLine()?.Split(' ');
                 var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, Quit>(line);
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TelegramClient.Core.ApiServies;
 using TelegramClient.Entities.TL;
 
 namespace TeleWithVictorApi
@@ -65,7 +66,8 @@ namespace TeleWithVictorApi
     }
     public interface IReceivingService
     {
-        void Receieve();
+        Task Receieve();
+       // UpdateHandler Recv();
     }
 
     public interface IServiceTl

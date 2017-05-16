@@ -31,6 +31,7 @@ namespace TeleWithVictorApi
             switch (peer)
             {
                 case Peer.User:
+                    var temp = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = id }, 0, -1, 50);
                     history = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = id }, 0, -1, 50);
                     if (history is TlMessagesSlice)
                     {
