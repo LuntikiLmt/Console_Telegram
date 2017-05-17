@@ -13,7 +13,7 @@ namespace TeleWithVictorApi
     {
         private readonly ITelegramClient _client;
         private readonly SimpleIoC _ioc;
-        private readonly List<IMessage> _messages = new List<IMessage>();
+        
         public IDialog Dialog { get; private set; }
         public IEnumerable<IDialogShort> DialogList { get; private set; }
 
@@ -25,6 +25,8 @@ namespace TeleWithVictorApi
 
         public async Task FillDialog(string dialogName, Peer peer, int id)
         {
+            List<IMessage> _messages = new List<IMessage>();
+
             Dialog = _ioc.Resolve<IDialog>();
             TlAbsMessages history;
 

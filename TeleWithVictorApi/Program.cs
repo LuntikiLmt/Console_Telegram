@@ -97,7 +97,7 @@ namespace TeleWithVictorApi
             await client.FillAsync();
 
 
-            async void Send(SendOptions opt)
+            Action<SendOptions> Send = async opt =>
             {
                 var builder = new StringBuilder();
                 builder.Append(opt.Message.First());
@@ -119,9 +119,9 @@ namespace TeleWithVictorApi
                 {
                     Console.WriteLine("Add '-d' to send to dialog or '-c' to send to contact");
                 }
-            }
+            };
 
-            async void Print(PrintOptions opt)
+            Action<PrintOptions> Print = async opt =>
             {
                 if (opt.Contacts)
                 {
@@ -135,12 +135,12 @@ namespace TeleWithVictorApi
                 {
                     await PrintDialogMessages(client, opt.Index);
                 }
-            }
+            };
 
             var myClient = ioc.Resolve<ITelegramClient>();
-            myClient.Updates.RecieveUpdates += async update =>
+            myClient.Updates.RecieveUpdates +=  update =>
             {
-                await client.ReceivingService.Receieve();
+                Console.WriteLine(update);
             };
 
             bool isRun = true;
@@ -153,15 +153,21 @@ namespace TeleWithVictorApi
 
                 parseResult.
                     WithParsed<Quit>(quit => isRun = false).
-                    WithParsed((Action<PrintOptions>) Print).
-                    WithParsed((Action<SendOptions>) Send).
+                    WithParsed(Print).
+                    WithParsed(Send).
                     WithParsed<AddContactOptions>(async opt => await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number));
+            }
+            foreach (var contactsServiceContact in client.ContactsService.Contacts)
+            {
+                Console.WriteLine(contactsServiceContact.FirstName);
             }
         }
 
         static void Main(string[] args)
         {
             Start().Wait();
+            
+            Console.ReadKey();
         }
 
         static async Task SendMessageToDialog(IServiceTl client, int index, string text)
