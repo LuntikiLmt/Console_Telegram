@@ -28,93 +28,50 @@ namespace TeleWithVictorApi
             List<IMessage> _messages = new List<IMessage>();
 
             Dialog = _ioc.Resolve<IDialog>();
-            TlAbsMessages history;
+            dynamic history;
 
             switch (peer)
             {
                 case Peer.User:
                     history = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = id }, 0, -1, 50);
-                    if (history is TlMessagesSlice)
-                    {
-                        foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
-                        {
-                            TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
-                            .OfType<TlUser>()
-                            .FirstOrDefault(c => c.Id == message.FromId);
-                            AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
-                        }
-                    }
-                    else
-                    {
-                        foreach (TlMessage message in ((TlMessages)history).Messages.Lists)
-                        {
-                            TlUser userFrom = ((TlMessages)history).Users.Lists
-                            .OfType<TlUser>()
-                            .FirstOrDefault(c => c.Id == message.FromId);
-                            AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
-                        }
-                    }
-
                     break;
 
                 case Peer.Chat:
                     history = await _client.GetHistoryAsync(new TlInputPeerChat { ChatId = id }, 0, -1, 50);
-                    if (history is TlMessagesSlice)
-                    {
-                        foreach (var message in ((TlMessagesSlice)history).Messages.Lists)
-                        {
-                            if (message is TlMessage)
-                            {
-                                var msg = (TlMessage)message;
-                                TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
-                                .OfType<TlUser>()
-                                .FirstOrDefault(c => c.Id == (msg.FromId));
-                                if (userFrom == null)
-                                    AddMsg(msg, _messages, dialogName, "");
-                                else
-                                    AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        foreach (var message in ((TlMessages)history).Messages.Lists)
-                        {
-                            if (message is TlMessage)
-                            {
-                                var msg = (TlMessage)message;
-                                TlUser userFrom = ((TlMessages)history).Users.Lists
-                                .OfType<TlUser>()
-                                .FirstOrDefault(c => c.Id == (msg.FromId));
-                                if (userFrom == null)
-                                    AddMsg(msg, _messages, dialogName, "");
-                                else
-                                    AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
-                            }
-                        }
-                    }
                     break;
 
                 default:
                     var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
                     var channel = dialogs.Chats.Lists.OfType<TlChannel>().FirstOrDefault(c => c.Id == id);
-                    history = (TlChannelMessages)await _client.GetHistoryAsync(new TlInputPeerChannel { ChannelId = channel.Id, AccessHash = (long)channel.AccessHash }, 0, -1, 50);
-                    foreach (var message in ((TlChannelMessages)history).Messages.Lists)
+                    history = await _client.GetHistoryAsync(new TlInputPeerChannel { ChannelId = channel.Id, AccessHash = (long)channel.AccessHash }, 0, -1, 50);
+                    break;
+            }
+
+
+            foreach (var message in history.Messages.Lists)
+            {
+                var msg = message as TlMessage;
+                if (msg != null)
+                {
+                    TlUser userFrom = null;
+                    foreach (var list in history.Users.Lists)
                     {
-                        if (message is TlMessage)
+                        if ((list as TlUser)?.Id == msg.FromId)
                         {
-                            var msg = (TlMessage)message;
-                            TlUser userFrom = ((TlChannelMessages)history).Users.Lists
-                            .OfType<TlUser>()
-                            .FirstOrDefault(c => c.Id == (msg.FromId));
-                            if (userFrom == null)
-                                AddMsg(msg, _messages, dialogName, "");   
-                            else
-                                AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
+                            userFrom = list;
+                            break;
                         }
                     }
-                    break;
-            }    
+                    if (userFrom == null)
+                    {
+                        AddMsg(msg, _messages, dialogName, "");
+                    }
+                    else
+                    {
+                        AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
+                    }
+                }
+            }
 
             Dialog.Fill(dialogName, _messages.Reverse<IMessage>());
         }

@@ -33,49 +33,8 @@ namespace TeleWithVictorApi
             ContactsService = _ioc.Resolve<IContactsService>();
             ReceivingService = _ioc.Resolve<IReceivingService>();
 
-            _client.Updates.RecieveUpdates += Updates_RecieveUpdates;
-
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();
-        }
-
-        private void Updates_RecieveUpdates(TlAbsUpdates update)
-        {
-            if (update is TlUpdates)
-            {
-                var list = (update as TlUpdates).Updates.Lists;
-                foreach (var tlAbsUpdate in list)
-                {
-                    if (tlAbsUpdate is TlUpdateNewMessage)
-                    {
-                        var message = (tlAbsUpdate as TlUpdateNewMessage).Message as TlMessage;
-                        string text = message?.Message;
-                        string sender = String.Empty;
-                        int? from = message?.FromId;
-                        foreach (var item in ContactsService.Contacts)
-                        {
-                            if (from == item.Id)
-                            {
-                                sender = item.FirstName + " " + item.LastName;
-                            }
-                        }
-                        //foreach (var dialogShort in DialogsService.DialogList)
-                        //{
-                        //    if (from == dialogShort.Id)
-                        //    {
-                        //        sender = dialogShort.DialogName;
-                        //    }
-                        //}
-                        
-                        Console.WriteLine("Message: \"" + text + "\" send from " + sender);
-                    }
-                    if (tlAbsUpdate is TlUpdateDraftMessage)
-                    {
-                        string message = ((tlAbsUpdate as TlUpdateDraftMessage).Draft as TlDraftMessage)?.Message;
-                        Console.WriteLine(message);
-                    }
-                }
-            }
         }
 
         private bool Validate_InputPhone(string phone)
