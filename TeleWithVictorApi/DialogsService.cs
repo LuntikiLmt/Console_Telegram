@@ -33,7 +33,6 @@ namespace TeleWithVictorApi
             switch (peer)
             {
                 case Peer.User:
-                    var temp = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = id }, 0, -1, 50);
                     history = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = id }, 0, -1, 50);
                     if (history is TlMessagesSlice)
                     {
@@ -59,7 +58,7 @@ namespace TeleWithVictorApi
                     break;
 
                 case Peer.Chat:
-                    history = await _client.GetHistoryAsync(new TlInputPeerChat() { ChatId = id }, 0, -1, 50);
+                    history = await _client.GetHistoryAsync(new TlInputPeerChat { ChatId = id }, 0, -1, 50);
                     foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
                     {
                         TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
@@ -72,7 +71,7 @@ namespace TeleWithVictorApi
                 default:
                     var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
                     var channel = dialogs.Chats.Lists.OfType<TlChannel>().FirstOrDefault(c => c.Id == id);
-                    history = (TlChannelMessages)await _client.GetHistoryAsync(new TlInputPeerChannel() { ChannelId = channel.Id, AccessHash = (long)channel.AccessHash }, 0, -1, 50);
+                    history = (TlChannelMessages)await _client.GetHistoryAsync(new TlInputPeerChannel { ChannelId = channel.Id, AccessHash = (long)channel.AccessHash }, 0, -1, 50);
                     foreach (TlMessage message in ((TlChannelMessages)history).Messages.Lists)
                     {
                         TlUser userFrom = ((TlChannelMessages)history).Users.Lists
