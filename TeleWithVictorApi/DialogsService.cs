@@ -59,12 +59,39 @@ namespace TeleWithVictorApi
 
                 case Peer.Chat:
                     history = await _client.GetHistoryAsync(new TlInputPeerChat { ChatId = id }, 0, -1, 50);
-                    foreach (TlMessage message in ((TlMessagesSlice)history).Messages.Lists)
+                    if (history is TlMessagesSlice)
                     {
-                        TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
-                        .OfType<TlUser>()
-                        .FirstOrDefault(c => c.Id == message.FromId);
-                        AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
+                        foreach (var message in ((TlMessagesSlice)history).Messages.Lists)
+                        {
+                            if (message is TlMessage)
+                            {
+                                var msg = (TlMessage)message;
+                                TlUser userFrom = ((TlMessagesSlice)history).Users.Lists
+                                .OfType<TlUser>()
+                                .FirstOrDefault(c => c.Id == (msg.FromId));
+                                if (userFrom == null)
+                                    AddMsg(msg, _messages, dialogName, "");
+                                else
+                                    AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (var message in ((TlMessages)history).Messages.Lists)
+                        {
+                            if (message is TlMessage)
+                            {
+                                var msg = (TlMessage)message;
+                                TlUser userFrom = ((TlMessages)history).Users.Lists
+                                .OfType<TlUser>()
+                                .FirstOrDefault(c => c.Id == (msg.FromId));
+                                if (userFrom == null)
+                                    AddMsg(msg, _messages, dialogName, "");
+                                else
+                                    AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
+                            }
+                        }
                     }
                     break;
 
@@ -72,12 +99,19 @@ namespace TeleWithVictorApi
                     var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
                     var channel = dialogs.Chats.Lists.OfType<TlChannel>().FirstOrDefault(c => c.Id == id);
                     history = (TlChannelMessages)await _client.GetHistoryAsync(new TlInputPeerChannel { ChannelId = channel.Id, AccessHash = (long)channel.AccessHash }, 0, -1, 50);
-                    foreach (TlMessage message in ((TlChannelMessages)history).Messages.Lists)
+                    foreach (var message in ((TlChannelMessages)history).Messages.Lists)
                     {
-                        TlUser userFrom = ((TlChannelMessages)history).Users.Lists
-                        .OfType<TlUser>()
-                        .FirstOrDefault(c => c.Id == message.FromId);
-                        AddMsg(message, _messages, userFrom.FirstName, userFrom.LastName);
+                        if (message is TlMessage)
+                        {
+                            var msg = (TlMessage)message;
+                            TlUser userFrom = ((TlChannelMessages)history).Users.Lists
+                            .OfType<TlUser>()
+                            .FirstOrDefault(c => c.Id == (msg.FromId));
+                            if (userFrom == null)
+                                AddMsg(msg, _messages, dialogName, "");   
+                            else
+                                AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
+                        }
                     }
                     break;
             }    
