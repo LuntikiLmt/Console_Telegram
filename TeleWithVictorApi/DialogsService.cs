@@ -47,7 +47,6 @@ namespace TeleWithVictorApi
                     break;
             }
 
-
             foreach (var message in history.Messages.Lists)
             {
                 var msg = message as TlMessage;
