@@ -14,7 +14,9 @@ namespace TeleWithVictorApi
     class ReceivingService : IReceivingService
     {
         private readonly ITelegramClient _client;
-        
+
+        public event NewDialog OnNewDialog;
+
         public ReceivingService(SimpleIoC ioc)
         {
             _client = ioc.Resolve<ITelegramClient>();
@@ -31,6 +33,9 @@ namespace TeleWithVictorApi
                     break;
                 case TlUpdates updates:
                     Console.WriteLine("Updates: "+updates.Updates);
+                    //удалили диалог, нужно обновить диалоги
+                    if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateDeleteMessages)) != 0)
+                        OnNewDialog();
                     break;
                 //case TelegramClient.Entities.TlVector vector:
                 //    break;

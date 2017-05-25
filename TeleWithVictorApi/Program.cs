@@ -256,6 +256,8 @@ namespace TeleWithVictorApi
             var contacts = client.ContactsService.Contacts;
             await client.SendingService.SendTextMessage(Peer.User, contacts.ElementAt(index).Id, text);
             Console.WriteLine(text);
+            //может быть так, что создался новый диалог, поэтому нужно обновить список
+            client.DialogsService.FillDialogList();
         }
 
         static async Task PrintDialogMessages(IServiceTl client, int index)

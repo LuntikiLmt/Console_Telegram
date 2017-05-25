@@ -32,9 +32,15 @@ namespace TeleWithVictorApi
             SendingService = _ioc.Resolve<ISendingService>();
             ContactsService = _ioc.Resolve<IContactsService>();
             ReceivingService = _ioc.Resolve<IReceivingService>();
+            ReceivingService.OnNewDialog += ReceivingService_OnNewDialog;
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();
+        }
+
+        private void ReceivingService_OnNewDialog()
+        {
+            DialogsService.FillDialogList();
         }
 
         private bool Validate_InputPhone(string phone)

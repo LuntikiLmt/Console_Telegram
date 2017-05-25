@@ -64,8 +64,11 @@ namespace TeleWithVictorApi
         Task SendTextMessage(Peer peer, int id, string msg);
         Task SendFile();
     }
+
+    public delegate void NewDialog();
     public interface IReceivingService
     {
+        event NewDialog OnNewDialog;
         Task Receieve();
        // UpdateHandler Recv();
     }

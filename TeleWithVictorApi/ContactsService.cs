@@ -32,7 +32,7 @@ namespace TeleWithVictorApi
                 Contacts = contacts
             };
             await _client.SendRequestAsync<TlImportedContacts>(req);
-            await FillContacts();
+            FillContacts();
         }
 
         public async Task FillContacts()
