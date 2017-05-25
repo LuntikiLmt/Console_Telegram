@@ -73,11 +73,11 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="TelegramClient.Core, Version=0.1.32.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelegramClientApi.0.1.32\lib\net46\TelegramClient.Core.dll</HintPath>
+    <Reference Include="TelegramClient.Core, Version=0.1.33.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\TelegramClientApi.0.1.33\lib\net46\TelegramClient.Core.dll</HintPath>
     </Reference>
-    <Reference Include="TelegramClient.Entities, Version=0.1.32.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\TelegramClientApi.Entities.0.1.32\lib\net46\TelegramClient.Entities.dll</HintPath>
+    <Reference Include="TelegramClient.Entities, Version=0.1.33.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\TelegramClientApi.Entities.0.1.33\lib\net46\TelegramClient.Entities.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

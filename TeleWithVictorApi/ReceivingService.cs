@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Media;
 using System.Text;
 using System.Threading.Tasks;
 using TelegramClient.Core;
@@ -28,19 +29,21 @@ namespace TeleWithVictorApi
             switch (update)
             {
                 case TlUpdateShort updateShort:
-                    Console.WriteLine("UpdateShort: "+ updateShort.Update);
+                    //Console.WriteLine("UpdateShort: "+ updateShort.Update);
                     //Console.WriteLine(updateShort.Update);
                     break;
                 case TlUpdates updates:
-                    Console.WriteLine("Updates: "+updates.Updates);
+                    //Console.WriteLine("Updates: "+updates.Updates);
                     //удалили диалог, нужно обновить диалоги
+                    SystemSounds.Beep.Play();
                     if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateDeleteMessages)) != 0)
                         OnNewDialog();
                     break;
                 //case TelegramClient.Entities.TlVector vector:
                 //    break;
                 default:
-                    Console.WriteLine("Default: "+update);
+                    //Console.WriteLine("Default: "+update);
+                    SystemSounds.Hand.Play();
                     break;
             }
         }
