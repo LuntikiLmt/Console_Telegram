@@ -63,7 +63,7 @@ namespace TeleWithVictorApi
                     }
                     if (userFrom == null)
                     {
-                        AddMsg(msg, _messages, dialogName, "");
+                        AddMsg(msg, _messages, dialogName, String.Empty);
                     }
                     else
                     {
@@ -92,7 +92,6 @@ namespace TeleWithVictorApi
                 int id;
                 Peer peer;
                 string title;
-                //var pr = dlg.Peer;
                 switch (dlg.Peer)
                 {
                     case TlPeerUser peerUser:
@@ -123,36 +122,6 @@ namespace TeleWithVictorApi
                         title = String.Empty;
                         break;
                 }
-                /*
-                if (pr is TlPeerUser)
-                {
-                    id = ((TlPeerUser)pr).UserId;
-                    peer = Peer.User;
-                    var user = dialogs.Users.Lists
-                    .OfType<TlUser>()
-                    .FirstOrDefault(c => c.Id == id);
-                    title = user.FirstName + " " + user.LastName;
-                }
-                else
-                {
-                    if (pr is TlPeerChannel)
-                    {
-                        id = ((TlPeerChannel)pr).ChannelId;
-                        peer = Peer.Channel;
-                        title = dialogs.Chats.Lists
-                        .OfType<TlChannel>()
-                        .FirstOrDefault(c => c.Id == id).Title;
-                    }
-                    else
-                    {
-                        id = ((TlPeerChat)pr).ChatId;
-                        peer = Peer.Chat;
-                        title = dialogs.Chats.Lists
-                        .OfType<TlChat>()
-                        .FirstOrDefault(c => c.Id == id).Title;
-                    }
-                }
-                */
                 var dlgShort = _ioc.Resolve<IDialogShort>();
                 dlgShort.Fill(title, peer, id);
                 dialogsShort.Add(dlgShort);
@@ -182,14 +151,14 @@ namespace TeleWithVictorApi
         public void Fill(string userFirstName, string userLastName, string text, DateTime date)
         {
             UserFirstName = userFirstName;
-            UserLastName = userLastName;
+            UserLastName = (userLastName != String.Empty) ? $" {userLastName}" : userLastName;
             MessageText = text;
             MessageDate = date;
         }
 
         public override string ToString()
         {
-            return MessageDate + " from " + UserFirstName + " " + UserLastName + ": " + MessageText;
+            return $"{MessageDate} from {UserFirstName}{UserLastName}: {MessageText}";
         }
     }
     class DialogShort : IDialogShort

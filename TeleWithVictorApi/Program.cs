@@ -75,6 +75,10 @@ namespace TeleWithVictorApi
                 {
                     PrintDialogs(client);
                 }
+                if (opt.UnreadMessages)
+                {
+                    PrintUnreadMessages(client);
+                }
                 if (opt.Index != -1)
                 {
                     await PrintDialogMessages(client, opt.Index);
@@ -122,7 +126,7 @@ namespace TeleWithVictorApi
                 Console.WriteLine(client.DialogsService.Dialog.DialogName);
                 foreach (var item in client.DialogsService.Dialog.Messages)
                 {
-                    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+                    Console.WriteLine(item);
                 }
 
             }
@@ -153,6 +157,18 @@ namespace TeleWithVictorApi
                 Console.WriteLine(index + " " + item);
                 index++;
             }
+        }
+
+        static void PrintUnreadMessages(IServiceTl client)
+        {
+            int index = 0;
+            Console.WriteLine("Unread messages:");
+            foreach (var item in client.ReceivingService.UnreadMessages)
+            {
+                Console.WriteLine($"{index} {item}");
+                index++;
+            }
+            client.ReceivingService.UnreadMessages.Clear();
         }
     }
 }

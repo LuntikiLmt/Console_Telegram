@@ -25,6 +25,9 @@ namespace TeleWithVictorApi
         [Option('d', "dialogs", HelpText = "Dialog list", Default = false)]
         bool Dialogs { get; set; }
 
+        [Option('u', "unread", HelpText = "Unread messages", Default = false)]
+        bool UnreadMessages { get; set; }
+
         [Option('c', "contacts", HelpText = "Contact list", Default = false)]
         bool Contacts { get; set; }
 
@@ -58,6 +61,7 @@ namespace TeleWithVictorApi
         public bool Dialogs { get; set; }
         public bool Contacts { get; set; }
         public int Index { get; set; }
+        public bool UnreadMessages { get; set; }
     }
 
     [Verb("addContact", HelpText = "Add contact to contact list")]

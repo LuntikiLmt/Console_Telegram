@@ -11,13 +11,15 @@ using TelegramClient.Entities.TL.Updates;
 
 namespace TeleWithVictorApi
 {
-    
     class ReceivingService : IReceivingService
     {
         private readonly ITelegramClient _client;
 
-        public event UpdateHandler OnUpdateDialogs;
-        public event UpdateHandler OnUpdateContacts;
+        public List<IMessage> UnreadMessages { get; private set; } = new List<IMessage>();
+        public event Action OnUpdateDialogs;
+        public event Action OnUpdateContacts;
+        public event Action<int, string, DateTime> OnAddUnreadMessageFromUser;
+        public event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
 
         public ReceivingService(SimpleIoC ioc)
         {
@@ -30,31 +32,45 @@ namespace TeleWithVictorApi
             switch (update)
             {
                 case TlUpdateShort updateShort:
-                    //Console.WriteLine("UpdateShort: "+ updateShort.Update);
-                    //Console.WriteLine(updateShort.Update);
                     break;
+
                 case TlUpdates updates:
-                    //Console.WriteLine("Updates: "+updates.Updates);
-                    //удалили диалог, нужно обновить диалоги
                     SystemSounds.Beep.Play();
                     if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateDeleteMessages)) != 0)
+                    {
                         OnUpdateDialogs();
+                    }
                     if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateContactLink)) != 0)
+                    {
+                        OnUpdateDialogs();
                         OnUpdateContacts();
+                    }
+                    if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateNewChannelMessage)) != 0)
+                    {
+                        var channel = updates.Chats.Lists.OfType<TlChannel>();
+                        var mes = updates.Updates.Lists.OfType<TlUpdateNewChannelMessage>();
+                        foreach (TlUpdateNewChannelMessage item in mes)
+                        {
+                            OnAddUnreadMessageFromChannel(channel.ElementAt(0).Title, (item.Message as TlMessage).Message, DateTimeService.TimeUnixToWindows((item.Message as TlMessage).Date, false));
+                        }
+                    }
                     break;
-                //case TelegramClient.Entities.TlVector vector:
+
+                case TlUpdateShortMessage shortMessage:
+                    SystemSounds.Beep.Play();
+                    OnAddUnreadMessageFromUser(shortMessage.UserId, shortMessage.Message, DateTimeService.TimeUnixToWindows(shortMessage.Date, false));
+                    break;
+
+                //case TlUpdateShortChatMessage chatMessage:
+                //    //OnAddUnreadMessage(chatMessage.FromId, chatMessage.Message, DateTimeService.TimeUnixToWindows(chatMessage.Date, false), chatMessage.ChatId);
+                //    Console.WriteLine("asdas");
                 //    break;
+
                 default:
-                    //Console.WriteLine("Default: "+update);
+                    Console.WriteLine("Default: "+update);
                     SystemSounds.Hand.Play();
                     break;
             }
         }
-
-        public async Task Receieve()
-        {
-            Console.WriteLine("New massage!");
-        }
-
     }
 }

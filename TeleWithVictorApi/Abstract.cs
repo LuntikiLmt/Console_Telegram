@@ -65,13 +65,13 @@ namespace TeleWithVictorApi
         Task SendFile();
     }
 
-    public delegate void UpdateHandler();
     public interface IReceivingService
     {
-        event UpdateHandler OnUpdateDialogs;
-        event UpdateHandler OnUpdateContacts;
-        Task Receieve();
-       // UpdateHandler Recv();
+        List<IMessage> UnreadMessages { get; }
+        event Action OnUpdateDialogs;
+        event Action OnUpdateContacts;
+        event Action<int, string, DateTime> OnAddUnreadMessageFromUser;
+        event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
     }
 
     public interface IServiceTl

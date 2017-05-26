@@ -14,7 +14,7 @@ namespace TeleWithVictorApi
         private readonly SimpleIoC _ioc;
 
         public IContactsService ContactsService { get; set; }
-        public IDialogsService DialogsService { get ; set; }
+        public IDialogsService DialogsService { get; set; }
         public ISendingService SendingService { get; set; }
         public IReceivingService ReceivingService { get; set; }
 
@@ -34,10 +34,47 @@ namespace TeleWithVictorApi
             ReceivingService = _ioc.Resolve<IReceivingService>();
             ReceivingService.OnUpdateDialogs += ReceivingService_OnUpdateDialogs;
             ReceivingService.OnUpdateContacts += ReceivingService_OnUpdateContacts;
+            ReceivingService.OnAddUnreadMessageFromUser += ReceivingService_OnAddUnreadMessageFromUser;
+            ReceivingService.OnAddUnreadMessageFromChannel += ReceivingService_OnAddUnreadMessageFromChannel; ;
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();
         }
+
+        private void ReceivingService_OnAddUnreadMessageFromChannel(string title, string text, DateTime dateTime)
+        {
+            var message = _ioc.Resolve<IMessage>();
+            message.Fill(title, String.Empty, text, dateTime);
+            ReceivingService.UnreadMessages.Add(message);
+        }
+
+        private void ReceivingService_OnAddUnreadMessageFromUser(int id, string text, DateTime dateTime)
+        {
+            var message = _ioc.Resolve<IMessage>();
+            var user = ContactsService.Contacts.FirstOrDefault(c => c.Id == id);
+            message.Fill(user == null ? "Unknown" : user.FirstName, user == null ? "sender" : user.LastName,
+                text, dateTime);
+            ReceivingService.UnreadMessages.Add(message);
+        }
+
+        //private void ReceivingService_OnAddUnreadMessage(int id, string text, DateTime dateTime,  int? chatId)
+        //{
+        //    var message = _ioc.Resolve<IMessage>();
+        //    var user = ContactsService.Contacts.FirstOrDefault(c => c.Id == id);
+        //    IDialogShort chat;
+        //    if (chatId != null)
+        //    {
+        //        chat = DialogsService.DialogList.FirstOrDefault(c => c.Id == chatId);
+        //        message.Fill(user == null ? "Unknown sender" : $"{user.FirstName} {user.LastName}", $"from {chat?.DialogName}", text, dateTime);
+        //    }
+        //    else
+        //    {
+        //        message.Fill(user == null ? "Unknown" : user.FirstName, user == null ? "sender" : user.LastName,
+        //            text, dateTime);
+        //    }
+            
+        //    ReceivingService.UnreadMessages.Add(message);
+        //}
 
         private void ReceivingService_OnUpdateContacts()
         {
@@ -102,7 +139,7 @@ namespace TeleWithVictorApi
                         Console.WriteLine(e.ToString());
                     }
                 }
-                
+
             }
             Console.WriteLine("\nWelcome!");
         }

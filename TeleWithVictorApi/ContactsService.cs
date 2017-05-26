@@ -40,7 +40,6 @@ namespace TeleWithVictorApi
             var cont = await _client.GetContactsAsync();
             IEnumerable<TlUser> users = cont.Users.Lists.Cast<TlUser>();
             List<IContact> contacts = new List<IContact>();
-            Contacts = new List<IContact>();
             foreach (var item in users)
             {
                 var contact = _ioc.Resolve<IContact>();
@@ -67,7 +66,7 @@ namespace TeleWithVictorApi
 
         public override string ToString()
         {
-            return FirstName + " " + LastName;
+            return $"{FirstName} {LastName}";
         }
     }
 }
