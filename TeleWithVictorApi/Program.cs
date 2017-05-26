@@ -30,7 +30,7 @@ namespace TeleWithVictorApi
             Console.WriteLine("Contacts:");
             foreach (var item in client.ContactsService.Contacts)
             {
-                Console.WriteLine(index + " " + item.FirstName + " " + item.LastName);
+                Console.WriteLine(index + " " + item);
                 index++;
             }
         }
@@ -47,7 +47,7 @@ namespace TeleWithVictorApi
                 Console.WriteLine(client.DialogsService.Dialog.DialogName);
                 foreach (var item in client.DialogsService.Dialog.Messages)
                 {
-                    Console.WriteLine(item.MessageDate + " from " + item.UserFirstName + " " + item.UserLastName + ": " + item.MessageText);
+                    Console.WriteLine(item);
                 }
 
             }

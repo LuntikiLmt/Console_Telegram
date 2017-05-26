@@ -92,7 +92,38 @@ namespace TeleWithVictorApi
                 int id;
                 Peer peer;
                 string title;
-                var pr = dlg.Peer;
+                //var pr = dlg.Peer;
+                switch (dlg.Peer)
+                {
+                    case TlPeerUser peerUser:
+                        id = peerUser.UserId;
+                        peer = Peer.User;
+                        var user = dialogs.Users.Lists
+                            .OfType<TlUser>()
+                            .FirstOrDefault(c => c.Id == id);
+                        title = user?.FirstName + " " + user?.LastName;
+                        break;
+                    case TlPeerChannel peerChannel:
+                        id = peerChannel.ChannelId;
+                        peer = Peer.Channel;
+                        title = dialogs.Chats.Lists
+                            .OfType<TlChannel>()
+                            .FirstOrDefault(c => c.Id == id)?.Title;
+                        break;
+                    case TlPeerChat peerChat:
+                        id = peerChat.ChatId;
+                        peer = Peer.Chat;
+                        title = dialogs.Chats.Lists
+                            .OfType<TlChat>()
+                            .FirstOrDefault(c => c.Id == id)?.Title;
+                        break;
+                    default:
+                        id = -1;
+                        peer = Peer.Unknown;
+                        title = String.Empty;
+                        break;
+                }
+                /*
                 if (pr is TlPeerUser)
                 {
                     id = ((TlPeerUser)pr).UserId;
@@ -121,11 +152,57 @@ namespace TeleWithVictorApi
                         .FirstOrDefault(c => c.Id == id).Title;
                     }
                 }
+                */
                 var dlgShort = _ioc.Resolve<IDialogShort>();
                 dlgShort.Fill(title, peer, id);
                 dialogsShort.Add(dlgShort);
             }
             DialogList = dialogsShort;
+        }
+    }
+
+    class Dialog : IDialog
+    {
+        public string DialogName { get; private set; }
+        public IEnumerable<IMessage> Messages { get; private set; }
+
+        public void Fill(string dialogName, IEnumerable<IMessage> messages)
+        {
+            DialogName = dialogName;
+            Messages = messages;
+        }
+    }
+    class Message : IMessage
+    {
+        public string UserFirstName { get; private set; }
+        public string UserLastName { get; private set; }
+        public string MessageText { get; private set; }
+        public DateTime MessageDate { get; private set; }
+
+        public void Fill(string userFirstName, string userLastName, string text, DateTime date)
+        {
+            UserFirstName = userFirstName;
+            UserLastName = userLastName;
+            MessageText = text;
+            MessageDate = date;
+        }
+
+        public override string ToString()
+        {
+            return MessageDate + " from " + UserFirstName + " " + UserLastName + ": " + MessageText;
+        }
+    }
+    class DialogShort : IDialogShort
+    {
+        public string DialogName { get; private set; }
+        public Peer Peer { get; private set; }
+        public int Id { get; private set; }
+
+        public void Fill(string dlName, Peer dlPeer, int dlId)
+        {
+            DialogName = dlName;
+            Peer = dlPeer;
+            Id = dlId;
         }
     }
 }

@@ -32,13 +32,19 @@ namespace TeleWithVictorApi
             SendingService = _ioc.Resolve<ISendingService>();
             ContactsService = _ioc.Resolve<IContactsService>();
             ReceivingService = _ioc.Resolve<IReceivingService>();
-            ReceivingService.OnNewDialog += ReceivingService_OnNewDialog;
+            ReceivingService.OnUpdateDialogs += ReceivingService_OnUpdateDialogs;
+            ReceivingService.OnUpdateContacts += ReceivingService_OnUpdateContacts;
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();
         }
 
-        private void ReceivingService_OnNewDialog()
+        private void ReceivingService_OnUpdateContacts()
+        {
+            ContactsService.FillContacts();
+        }
+
+        private void ReceivingService_OnUpdateDialogs()
         {
             DialogsService.FillDialogList();
         }
@@ -99,61 +105,6 @@ namespace TeleWithVictorApi
                 
             }
             Console.WriteLine("\nWelcome!");
-        }
-    }
-    
-    class Dialog : IDialog
-    {
-        public string DialogName { get; private set; }
-        public IEnumerable<IMessage> Messages { get; private set; }
-
-        public void Fill(string dialogName, IEnumerable<IMessage> messages)
-        {
-            DialogName = dialogName;
-            Messages = messages;
-        }
-    }
-    class Message : IMessage
-    {
-        public string UserFirstName { get; private set; }
-        public string UserLastName { get; private set; }
-        public string MessageText { get; private set; }
-        public DateTime MessageDate { get; private set; }
-
-        public void Fill(string userFirstName, string userLastName, string text, DateTime date)
-        {
-            UserFirstName = userFirstName;
-            UserLastName = userLastName;
-            MessageText = text;
-            MessageDate = date;
-        }
-    }
-    class Contact : IContact
-    {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string PhoneNumber { get; private set; }
-        public int Id { get; private set; }
-
-        public void FillValues(string firstName, string lastName, string phone, int id)
-        {
-            FirstName = firstName;
-            LastName = lastName;
-            PhoneNumber = phone;
-            Id = id;
-        }
-    }
-    class DialogShort : IDialogShort
-    {
-        public string DialogName { get; private set; }
-        public Peer Peer { get; private set; }
-        public int Id { get; private set; }
-
-        public void Fill(string dlName, Peer dlPeer, int dlId)
-        {
-            DialogName = dlName;
-            Peer = dlPeer;
-            Id = dlId;
         }
     }
 }

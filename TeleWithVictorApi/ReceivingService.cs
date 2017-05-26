@@ -16,7 +16,8 @@ namespace TeleWithVictorApi
     {
         private readonly ITelegramClient _client;
 
-        public event NewDialog OnNewDialog;
+        public event UpdateHandler OnUpdateDialogs;
+        public event UpdateHandler OnUpdateContacts;
 
         public ReceivingService(SimpleIoC ioc)
         {
@@ -37,7 +38,9 @@ namespace TeleWithVictorApi
                     //удалили диалог, нужно обновить диалоги
                     SystemSounds.Beep.Play();
                     if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateDeleteMessages)) != 0)
-                        OnNewDialog();
+                        OnUpdateDialogs();
+                    if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateContactLink)) != 0)
+                        OnUpdateContacts();
                     break;
                 //case TelegramClient.Entities.TlVector vector:
                 //    break;

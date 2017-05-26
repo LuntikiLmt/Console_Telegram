@@ -50,4 +50,24 @@ namespace TeleWithVictorApi
             Contacts = contacts;
         }
     }
+    class Contact : IContact
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string PhoneNumber { get; private set; }
+        public int Id { get; private set; }
+
+        public void FillValues(string firstName, string lastName, string phone, int id)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            PhoneNumber = phone;
+            Id = id;
+        }
+
+        public override string ToString()
+        {
+            return FirstName + " " + LastName;
+        }
+    }
 }

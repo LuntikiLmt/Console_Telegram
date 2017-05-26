@@ -8,7 +8,7 @@ using TelegramClient.Entities.TL;
 
 namespace TeleWithVictorApi
 {
-    public enum Peer { User, Channel, Chat }
+    public enum Peer { User, Channel, Chat, Unknown }
 
     public interface IContact
     {
@@ -65,10 +65,11 @@ namespace TeleWithVictorApi
         Task SendFile();
     }
 
-    public delegate void NewDialog();
+    public delegate void UpdateHandler();
     public interface IReceivingService
     {
-        event NewDialog OnNewDialog;
+        event UpdateHandler OnUpdateDialogs;
+        event UpdateHandler OnUpdateContacts;
         Task Receieve();
        // UpdateHandler Recv();
     }
