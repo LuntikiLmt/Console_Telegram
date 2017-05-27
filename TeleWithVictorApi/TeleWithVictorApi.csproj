@@ -92,6 +92,7 @@
     <Compile Include="SendingService.cs" />
     <Compile Include="ServiceClient.cs" />
     <Compile Include="SimpleIoC.cs" />
+    <Compile Include="Validation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

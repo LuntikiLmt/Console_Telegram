@@ -53,11 +53,11 @@ namespace TeleWithVictorApi
                 if (msg != null)
                 {
                     TlUser userFrom = null;
-                    foreach (var list in history.Users.Lists)
+                    foreach (var user in history.Users.Lists)
                     {
-                        if ((list as TlUser)?.Id == msg.FromId)
+                        if ((user as TlUser)?.Id == msg.FromId)
                         {
-                            userFrom = list;
+                            userFrom = user;
                             break;
                         }
                     }
@@ -151,14 +151,16 @@ namespace TeleWithVictorApi
         public void Fill(string userFirstName, string userLastName, string text, DateTime date)
         {
             UserFirstName = userFirstName;
-            UserLastName = (userLastName != String.Empty) ? $" {userLastName}" : userLastName;
+            UserLastName = userLastName;
             MessageText = text;
             MessageDate = date;
         }
 
         public override string ToString()
         {
-            return $"{MessageDate} from {UserFirstName}{UserLastName}: {MessageText}";
+            return String.IsNullOrEmpty(UserLastName) 
+                ? $"{MessageDate} from {UserFirstName}: {MessageText}"
+                : $"{MessageDate} from {UserFirstName} {UserLastName}: {MessageText}";
         }
     }
     class DialogShort : IDialogShort

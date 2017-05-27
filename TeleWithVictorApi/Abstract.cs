@@ -81,6 +81,10 @@ namespace TeleWithVictorApi
         ISendingService SendingService { get; set; }
         IReceivingService ReceivingService { get; set; }
 
+        bool Authorize();
+        Task EnterPhoneNumber(string number);
+        Task<bool> EnterIncomingCode(string code);
+
         Task FillAsync();
     }
 }

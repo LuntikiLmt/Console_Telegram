@@ -13,11 +13,6 @@ namespace TeleWithVictorApi
 {
     class Program
     {
-        static async Task Start(IServiceTl client)
-        {
-            await client.FillAsync();
-        }
-
         static void Main(string[] args)
         {
             var ioc = new SimpleIoC();
@@ -39,7 +34,9 @@ namespace TeleWithVictorApi
 
             var client = ioc.Resolve<IServiceTl>();
 
-            Start(client).Wait();
+            //Start(client).Wait();
+            Authorize(client);
+            client.FillAsync().Wait();
 
             Action<SendOptions> Send = async opt =>
             {
@@ -98,6 +95,30 @@ namespace TeleWithVictorApi
                     WithParsed(Send).
                     WithParsed<AddContactOptions>(async opt => await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number));
             }
+        }
+
+        static void Authorize(IServiceTl client)
+        {
+            if (!client.Authorize())
+            {
+                string phone, code;
+                do
+                {
+                    Console.Write("Enter your phone number:\n+7");
+                    phone = $"7{Console.ReadLine()}";
+                }
+                while (!Validation.PhoneValidation(phone));
+
+                client.EnterPhoneNumber(phone);
+                do
+                {
+                    Console.WriteLine("Enter incoming code:");
+                    code = Console.ReadLine();
+                }
+                while (!client.EnterIncomingCode(code).Result);
+                
+            }
+            Console.WriteLine("Welcome");
         }
 
         static async Task SendMessageToDialog(IServiceTl client, int index, string text)
@@ -162,13 +183,20 @@ namespace TeleWithVictorApi
         static void PrintUnreadMessages(IServiceTl client)
         {
             int index = 0;
-            Console.WriteLine("Unread messages:");
-            foreach (var item in client.ReceivingService.UnreadMessages)
+            if (client.ReceivingService.UnreadMessages.Count == 0)
             {
-                Console.WriteLine($"{index} {item}");
-                index++;
+                Console.WriteLine("No unread messages");
             }
-            client.ReceivingService.UnreadMessages.Clear();
+            else
+            {
+                Console.WriteLine("Unread messages:");
+                foreach (var item in client.ReceivingService.UnreadMessages)
+                {
+                    Console.WriteLine($"{index} {item}");
+                    index++;
+                }
+                client.ReceivingService.UnreadMessages.Clear();
+            }
         }
     }
 }

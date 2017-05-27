@@ -12,18 +12,46 @@ namespace TeleWithVictorApi
     {
         private readonly ITelegramClient _client;
         private readonly SimpleIoC _ioc;
+        private string _phoneNumber = null;
+        private string _hash = null;
 
         public IContactsService ContactsService { get; set; }
         public IDialogsService DialogsService { get; set; }
         public ISendingService SendingService { get; set; }
         public IReceivingService ReceivingService { get; set; }
 
+        public bool Authorize()
+        {
+            _client.ConnectAsync().Wait();
+            return _client.IsUserAuthorized();
+        }
+
+        public async Task EnterPhoneNumber(string number)
+        {
+            _phoneNumber = number;
+            _hash = await _client.SendCodeRequestAsync(number);
+        }
+
+        public async Task<bool> EnterIncomingCode(string code)
+        {
+            try
+            {
+                await _client.MakeAuthAsync(_phoneNumber, _hash, code);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
+            }
+        }
+
         public ServiceClient(SimpleIoC ioc)
         {
             _ioc = ioc;
             _client = ioc.Resolve<ITelegramClient>();
 
-            Authenticate().Wait();
+            //Authenticate().Wait();
         }
 
         public async Task FillAsync()
@@ -35,7 +63,7 @@ namespace TeleWithVictorApi
             ReceivingService.OnUpdateDialogs += ReceivingService_OnUpdateDialogs;
             ReceivingService.OnUpdateContacts += ReceivingService_OnUpdateContacts;
             ReceivingService.OnAddUnreadMessageFromUser += ReceivingService_OnAddUnreadMessageFromUser;
-            ReceivingService.OnAddUnreadMessageFromChannel += ReceivingService_OnAddUnreadMessageFromChannel; ;
+            ReceivingService.OnAddUnreadMessageFromChannel += ReceivingService_OnAddUnreadMessageFromChannel;
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();
@@ -86,16 +114,6 @@ namespace TeleWithVictorApi
             DialogsService.FillDialogList();
         }
 
-        private bool Validate_InputPhone(string phone)
-        {
-            if (phone[0] == '7' && phone.Length == 11)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
         private async Task Authenticate()
         {
             await _client.ConnectAsync();
@@ -108,7 +126,7 @@ namespace TeleWithVictorApi
                 {
                     Console.WriteLine("Number should be in format (7##########):");
                     phoneNumber = Console.ReadLine();
-                    isPhoneCorrect = Validate_InputPhone(phoneNumber);
+                    isPhoneCorrect = Validation.PhoneValidation(phoneNumber);
                 }
 
                 Console.WriteLine("Input a code, send to you in telegram: ");
