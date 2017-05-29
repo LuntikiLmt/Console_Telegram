@@ -81,6 +81,7 @@ namespace TeleWithVictorApi
         ISendingService SendingService { get; set; }
         IReceivingService ReceivingService { get; set; }
 
+        void LogOut();
         bool Authorize();
         Task EnterPhoneNumber(string number);
         Task<bool> EnterIncomingCode(string code);

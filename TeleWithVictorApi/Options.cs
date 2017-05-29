@@ -72,6 +72,12 @@ namespace TeleWithVictorApi
         public string LastName { get; set; }
     }
 
+    [Verb("logout", HelpText = "Log out")]
+    class LogOutOptions
+    {
+        
+    }
+
     [Verb("quit", HelpText = "Leave this pretty program")]
     class Quit
     {

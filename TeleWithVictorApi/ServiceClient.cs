@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,19 @@ namespace TeleWithVictorApi
         public IDialogsService DialogsService { get; set; }
         public ISendingService SendingService { get; set; }
         public IReceivingService ReceivingService { get; set; }
+
+        public void LogOut()
+        {
+            try
+            {
+                File.Delete(Path.GetFullPath("session.dat"));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
 
         public bool Authorize()
         {

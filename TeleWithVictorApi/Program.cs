@@ -87,13 +87,18 @@ namespace TeleWithVictorApi
             {
                 Console.Write("\n->");
                 var line = Console.ReadLine()?.Split(' ');
-                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, Quit>(line);
+                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, Quit, LogOutOptions>(line);
 
                 parseResult.
                     WithParsed<Quit>(quit => isRun = false).
                     WithParsed(Print).
                     WithParsed(Send).
-                    WithParsed<AddContactOptions>(async opt => await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number));
+                    WithParsed<AddContactOptions>(async opt => await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number)).
+                    WithParsed<LogOutOptions>(logout => {
+                        //client.LogOut();
+                        Authorize(client);
+                        client.FillAsync().Wait();
+                    });
             }
         }
 
