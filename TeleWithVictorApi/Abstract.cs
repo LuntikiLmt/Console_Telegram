@@ -21,12 +21,11 @@ namespace TeleWithVictorApi
     }
     public interface IMessage
     {
-        string UserFirstName { get; }
-        string UserLastName { get; }
+        string SenderName { get; }
         string MessageText { get; }
         //МОЖЕТ ЕЩЕ быть Медиа файл!!!
         DateTime MessageDate { get; }
-        void Fill(string userFirstName, string userLastName, string text, DateTime date);
+        void Fill(string senderName, string text, DateTime date);
     }
     public interface IDialog
     {
@@ -76,10 +75,10 @@ namespace TeleWithVictorApi
 
     public interface IServiceTl
     {
-        IContactsService ContactsService { get; set; }
-        IDialogsService DialogsService { get; set; }
-        ISendingService SendingService { get; set; }
-        IReceivingService ReceivingService { get; set; }
+        IContactsService ContactsService { get; }
+        IDialogsService DialogsService { get; }
+        ISendingService SendingService { get; }
+        IReceivingService ReceivingService { get; }
 
         void LogOut();
         bool Authorize();

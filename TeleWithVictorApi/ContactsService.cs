@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TelegramClient.Core;
@@ -24,7 +25,7 @@ namespace TeleWithVictorApi
         public async Task AddContact(string firstName, string lastName, string phone)
         {
             var contacts = new TlVector<TlInputPhoneContact>();
-            contacts.Lists.Add(new TlInputPhoneContact {  FirstName = firstName, LastName = lastName, Phone = phone});
+            contacts.Lists.Add(new TlInputPhoneContact {  FirstName = firstName ?? String.Empty, LastName = lastName ?? String.Empty, Phone = phone ?? String.Empty });
 
             //Create request 
             var req = new TlRequestImportContacts
@@ -66,7 +67,7 @@ namespace TeleWithVictorApi
 
         public override string ToString()
         {
-            return $"{FirstName} {LastName}";
+            return String.IsNullOrEmpty(LastName) ? $"{FirstName}" : $"{FirstName} {LastName}";
         }
     }
 }

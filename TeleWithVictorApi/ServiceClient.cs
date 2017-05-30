@@ -16,10 +16,10 @@ namespace TeleWithVictorApi
         private string _phoneNumber = null;
         private string _hash = null;
 
-        public IContactsService ContactsService { get; set; }
-        public IDialogsService DialogsService { get; set; }
-        public ISendingService SendingService { get; set; }
-        public IReceivingService ReceivingService { get; set; }
+        public IContactsService ContactsService { get; private set; }
+        public IDialogsService DialogsService { get; private set; }
+        public ISendingService SendingService { get; private set; }
+        public IReceivingService ReceivingService { get; private set; }
 
         public void LogOut()
         {
@@ -86,7 +86,7 @@ namespace TeleWithVictorApi
         private void ReceivingService_OnAddUnreadMessageFromChannel(string title, string text, DateTime dateTime)
         {
             var message = _ioc.Resolve<IMessage>();
-            message.Fill(title, String.Empty, text, dateTime);
+            message.Fill(title, text, dateTime);
             ReceivingService.UnreadMessages.Add(message);
         }
 
@@ -94,8 +94,7 @@ namespace TeleWithVictorApi
         {
             var message = _ioc.Resolve<IMessage>();
             var user = ContactsService.Contacts.FirstOrDefault(c => c.Id == id);
-            message.Fill(user == null ? "Unknown" : user.FirstName, user == null ? "sender" : user.LastName,
-                text, dateTime);
+            message.Fill(user?.ToString() ?? "Unknown sender", text, dateTime);
             ReceivingService.UnreadMessages.Add(message);
         }
 

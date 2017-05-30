@@ -61,24 +61,17 @@ namespace TeleWithVictorApi
                             break;
                         }
                     }
-                    if (userFrom == null)
-                    {
-                        AddMsg(msg, _messages, dialogName, String.Empty);
-                    }
-                    else
-                    {
-                        AddMsg(msg, _messages, userFrom.FirstName, userFrom.LastName);
-                    }
+                    AddMsg(msg, _messages, userFrom == null ? dialogName : $"{userFrom.FirstName} {userFrom.LastName}");
                 }
             }
 
             Dialog.Fill(dialogName, _messages.Reverse<IMessage>());
         }
 
-        private void AddMsg(TlMessage message, List<IMessage> messages, string firstName, string lastName)
+        private void AddMsg(TlMessage message, List<IMessage> messages, string senderName)
         {
             var msg = _ioc.Resolve<IMessage>();
-            msg.Fill(firstName, lastName, message.Message, DateTimeService.TimeUnixToWindows(message.Date, true));
+            msg.Fill(senderName, message.Message, DateTimeService.TimeUnixToWindows(message.Date, true));
             messages.Add(msg);
         }
 
@@ -143,24 +136,20 @@ namespace TeleWithVictorApi
     }
     class Message : IMessage
     {
-        public string UserFirstName { get; private set; }
-        public string UserLastName { get; private set; }
+        public string SenderName { get; private set; }
         public string MessageText { get; private set; }
         public DateTime MessageDate { get; private set; }
 
-        public void Fill(string userFirstName, string userLastName, string text, DateTime date)
+        public void Fill(string senderName, string text, DateTime date)
         {
-            UserFirstName = userFirstName;
-            UserLastName = userLastName;
+            SenderName = senderName;
             MessageText = text;
             MessageDate = date;
         }
 
         public override string ToString()
         {
-            return String.IsNullOrEmpty(UserLastName) 
-                ? $"{MessageDate} from {UserFirstName}: {MessageText}"
-                : $"{MessageDate} from {UserFirstName} {UserLastName}: {MessageText}";
+            return $"{MessageDate} from {SenderName}: {MessageText}";
         }
     }
     class DialogShort : IDialogShort

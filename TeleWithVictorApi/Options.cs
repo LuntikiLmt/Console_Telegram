@@ -43,7 +43,7 @@ namespace TeleWithVictorApi
         [Value(1, HelpText = "First name", Required = true)]
         string FirstName { get; set; }
 
-        [Value(2, HelpText = "LastName", Required = false)]
+        [Value(2, HelpText = "Last Name", Required = false)]
         string LastName { get; set; }
     }
 
@@ -55,7 +55,7 @@ namespace TeleWithVictorApi
         public int ContactIndex { get; set; }
     }
 
-    [Verb("print", HelpText = "Print list of contacts or dialogs")]
+    [Verb("print", HelpText = "Print list of 1) contacts 2) dialogs 3) messages in certain dialog 4) unread messages")]
     class PrintOptions : IPrintOptions
     {
         public bool Dialogs { get; set; }
