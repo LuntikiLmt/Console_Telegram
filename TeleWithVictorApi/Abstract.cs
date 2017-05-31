@@ -53,6 +53,7 @@ namespace TeleWithVictorApi
         IEnumerable<IContact> Contacts { get; }
         Task FillContacts();
         Task AddContact(string firstName, string lastName, string phone);
+        Task DeleteContact(int number);
     }
 
     public interface IDialogsService

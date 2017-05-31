@@ -33,6 +33,16 @@ namespace TeleWithVictorApi
                 Contacts = contacts
             };
             await _client.SendRequestAsync<TlImportedContacts>(req);
+            //FillContacts();
+        }
+
+        public async Task DeleteContact(int number)
+        {
+            var req = new TlRequestDeleteContact
+            {
+                Id = new TlInputUser() {  UserId = Contacts.ToList()[number].Id }
+            };
+            await _client.SendRequestAsync<TlLink>(req);
             FillContacts();
         }
 

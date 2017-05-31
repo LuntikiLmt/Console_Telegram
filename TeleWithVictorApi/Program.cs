@@ -48,17 +48,24 @@ namespace TeleWithVictorApi
                     builder.Append(opt.Message.ElementAt(i));
                 }
                 var message = builder.ToString();
-                if (opt.DialogIndex != -1)
+                try
                 {
-                    await SendMessageToDialog(client, opt.DialogIndex, message);
+                    if (opt.DialogIndex != -1)
+                    {
+                        await SendMessageToDialog(client, opt.DialogIndex, message);
+                    }
+                    else if (opt.ContactIndex != -1)
+                    {
+                        await SendMessageToContact(client, opt.ContactIndex, message);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Add '-d' to send to dialog or '-c' to send to contact");
+                    }
                 }
-                else if (opt.ContactIndex != -1)
+                catch (ArgumentOutOfRangeException e)
                 {
-                    await SendMessageToContact(client, opt.ContactIndex, message);
-                }
-                else
-                {
-                    Console.WriteLine("Add '-d' to send to dialog or '-c' to send to contact");
+                    Console.WriteLine("Number is incorrect!");
                 }
             };
 
@@ -78,7 +85,14 @@ namespace TeleWithVictorApi
                 }
                 if (opt.Index != -1)
                 {
-                    await PrintDialogMessages(client, opt.Index);
+                    try
+                    {
+                        await PrintDialogMessages(client, opt.Index);
+                    }
+                    catch (ArgumentOutOfRangeException e)
+                    {
+                        Console.WriteLine("Number is incorrect!");
+                    }
                 }
             };
 
@@ -87,12 +101,13 @@ namespace TeleWithVictorApi
             {
                 Console.Write("\n->");
                 var line = Console.ReadLine()?.Split(' ');
-                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, Quit, LogOutOptions>(line);
+                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, DeleteContactOptions, Quit, LogOutOptions>(line);
 
                 parseResult.
                     WithParsed<Quit>(quit => isRun = false).
                     WithParsed(Print).
                     WithParsed(Send).
+                    WithParsed<DeleteContactOptions>(async opt => await client.ContactsService.DeleteContact(opt.Index)).
                     WithParsed<AddContactOptions>(async opt => await client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number)).
                     WithParsed<LogOutOptions>(logout => {
                         //client.LogOut();
@@ -144,24 +159,15 @@ namespace TeleWithVictorApi
 
         static async Task PrintDialogMessages(IServiceTl client, int index)
         {
-            try
+            var dlg = client.DialogsService.DialogList.ToList()[index];
+            await client.DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id);
+            //Console.Clear();
+            Console.WriteLine($"{client.DialogsService.Dialog.DialogName}");
+            foreach (var item in client.DialogsService.Dialog.Messages)
             {
-                var dlg = client.DialogsService.DialogList.ToList()[index];
-                await client.DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id);
-                //Console.Clear();
-                Console.WriteLine($"{client.DialogsService.Dialog.DialogName}");
-                foreach (var item in client.DialogsService.Dialog.Messages)
-                {
-                    Console.WriteLine(item);
-                }
-                Console.Write("\n->");
-
+                Console.WriteLine(item);
             }
-            catch (Exception e)
-            {
-                Console.WriteLine("Number is incorrect! ");
-                Console.WriteLine(e.ToString());
-            }
+            Console.Write("\n->");
         }
 
         static void PrintDialogs(IServiceTl client)

@@ -35,6 +35,12 @@ namespace TeleWithVictorApi
         int Index { get; set; }
     }
 
+    interface IDeleteContactOptions
+    {
+        [Value(0,HelpText = "Number of contact to delete", Required =true)]
+        int Index { get; set; }
+    }
+
     interface IAddContactOptions
     {
         [Value(0, HelpText = "Telephone number", Required = true)]
@@ -62,6 +68,12 @@ namespace TeleWithVictorApi
         public bool Contacts { get; set; }
         public int Index { get; set; }
         public bool UnreadMessages { get; set; }
+    }
+
+    [Verb("deleteContact", HelpText = "Delete contact")]
+    class DeleteContactOptions : IDeleteContactOptions
+    {
+        public int Index { get; set; }
     }
 
     [Verb("addContact", HelpText = "Add contact to contact list")]
