@@ -170,7 +170,7 @@ namespace TeleWithVictorApi
             Console.WriteLine("\nDialogs:");
             foreach (var item in client.DialogsService.DialogList)
             {
-                Console.WriteLine(index + " " + item.DialogName);
+                Console.WriteLine($"{index} {item.DialogName}");
                 index++;
             }
         }

@@ -10,7 +10,7 @@ namespace TeleWithVictorApi
 {
     interface ISendOptions
     {
-        [Option('m', "message", Default = "Hello", HelpText = "Sending message", Separator = ' ')]
+        [Option('m', "message", HelpText = "Sending message", Required = true, Separator = ' ')]
         IEnumerable<string> Message { get; set; }
 
         [Option('d', "dialog", Default = -1, HelpText = "Send to dialog")]
