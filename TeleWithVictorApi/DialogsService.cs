@@ -116,7 +116,8 @@ namespace TeleWithVictorApi
                         break;
                 }
                 var dlgShort = _ioc.Resolve<IDialogShort>();
-                dlgShort.Fill(title, peer, id);
+                dlgShort.Fill(title, peer);
+                dlgShort.Id = id;
                 dialogsShort.Add(dlgShort);
             }
             DialogList = dialogsShort;
@@ -156,13 +157,12 @@ namespace TeleWithVictorApi
     {
         public string DialogName { get; private set; }
         public Peer Peer { get; private set; }
-        public int Id { get; private set; }
+        public int Id { get; set; }
 
-        public void Fill(string dlName, Peer dlPeer, int dlId)
+        public void Fill(string dlName, Peer dlPeer)
         {
             DialogName = dlName;
             Peer = dlPeer;
-            Id = dlId;
         }
     }
 }

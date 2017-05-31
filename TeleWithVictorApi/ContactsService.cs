@@ -44,7 +44,8 @@ namespace TeleWithVictorApi
             foreach (var item in users)
             {
                 var contact = _ioc.Resolve<IContact>();
-                contact.FillValues(item.FirstName, item.LastName, item.Phone, item.Id);
+                contact.FillValues(item.FirstName, item.LastName, item.Phone);
+                contact.Id = item.Id;
                 contacts.Add(contact);
             }
             Contacts = contacts;
@@ -55,14 +56,13 @@ namespace TeleWithVictorApi
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string PhoneNumber { get; private set; }
-        public int Id { get; private set; }
+        public int Id { get; set; }
 
-        public void FillValues(string firstName, string lastName, string phone, int id)
+        public void FillValues(string firstName, string lastName, string phone)
         {
             FirstName = firstName;
             LastName = lastName;
             PhoneNumber = phone;
-            Id = id;
         }
 
         public override string ToString()

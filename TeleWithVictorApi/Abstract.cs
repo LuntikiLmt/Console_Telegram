@@ -10,15 +10,20 @@ namespace TeleWithVictorApi
 {
     public enum Peer { User, Channel, Chat, Unknown }
 
-    public interface IContact
+    public interface IHaveId
+    {
+        int Id { get; set; }
+    }
+
+    public interface IContact : IHaveId
     {
         string FirstName { get; set; }
         string LastName { get; set; }
         string PhoneNumber { get; }
-        int Id { get; }
 
-        void FillValues(string firstName, string lastName, string phone, int id);
+        void FillValues(string firstName, string lastName, string phone);
     }
+
     public interface IMessage
     {
         string SenderName { get; }
@@ -27,6 +32,7 @@ namespace TeleWithVictorApi
         DateTime MessageDate { get; }
         void Fill(string senderName, string text, DateTime date);
     }
+
     public interface IDialog
     {
         string DialogName { get; }
@@ -34,12 +40,12 @@ namespace TeleWithVictorApi
         void Fill(string dialogName, IEnumerable<IMessage> messages);
     }
 
-    public interface IDialogShort
+    public interface IDialogShort : IHaveId
     {
         string DialogName { get; }
         Peer Peer { get; }
-        int Id { get; }
-        void Fill(string dlName, Peer dlPeer, int dlId);
+
+        void Fill(string dlName, Peer dlPeer);
     }
     
     public interface IContactsService
@@ -73,18 +79,21 @@ namespace TeleWithVictorApi
         event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
     }
 
-    public interface IServiceTl
+    public interface IServiceTl : IAuthorization
     {
         IContactsService ContactsService { get; }
         IDialogsService DialogsService { get; }
         ISendingService SendingService { get; }
         IReceivingService ReceivingService { get; }
 
+        Task FillAsync();
+    }
+
+    public interface IAuthorization
+    {
         void LogOut();
         bool Authorize();
         Task EnterPhoneNumber(string number);
         Task<bool> EnterIncomingCode(string code);
-
-        Task FillAsync();
     }
 }

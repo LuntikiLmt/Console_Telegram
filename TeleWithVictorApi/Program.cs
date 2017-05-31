@@ -149,11 +149,12 @@ namespace TeleWithVictorApi
                 var dlg = client.DialogsService.DialogList.ToList()[index];
                 await client.DialogsService.FillDialog(dlg.DialogName, dlg.Peer, dlg.Id);
                 //Console.Clear();
-                Console.WriteLine(client.DialogsService.Dialog.DialogName);
+                Console.WriteLine($"{client.DialogsService.Dialog.DialogName}");
                 foreach (var item in client.DialogsService.Dialog.Messages)
                 {
                     Console.WriteLine(item);
                 }
+                Console.Write("\n->");
 
             }
             catch (Exception e)
@@ -166,7 +167,7 @@ namespace TeleWithVictorApi
         static void PrintDialogs(IServiceTl client)
         {
             int index = 0;
-            Console.WriteLine("Dialogs:");
+            Console.WriteLine("\nDialogs:");
             foreach (var item in client.DialogsService.DialogList)
             {
                 Console.WriteLine(index + " " + item.DialogName);
@@ -177,7 +178,7 @@ namespace TeleWithVictorApi
         static void PrintContacts(IServiceTl client)
         {
             int index = 0;
-            Console.WriteLine("Contacts:");
+            Console.WriteLine("\nContacts:");
             foreach (var item in client.ContactsService.Contacts)
             {
                 Console.WriteLine(index + " " + item);
@@ -190,11 +191,11 @@ namespace TeleWithVictorApi
             int index = 0;
             if (client.ReceivingService.UnreadMessages.Count == 0)
             {
-                Console.WriteLine("No unread messages");
+                Console.WriteLine("\nNo unread messages");
             }
             else
             {
-                Console.WriteLine("Unread messages:");
+                Console.WriteLine("\nUnread messages:");
                 foreach (var item in client.ReceivingService.UnreadMessages)
                 {
                     Console.WriteLine($"{index} {item}");
