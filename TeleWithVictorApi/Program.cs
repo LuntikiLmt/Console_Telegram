@@ -140,8 +140,18 @@ namespace TeleWithVictorApi
                     {
                         string mes = Console.ReadLine();
                         if (mes == null)
+                        {
                             break;
-                        SendMessageToDialog(client, opt.Index, mes).Wait();
+                        }
+                        if (mes.Substring(0, 2) == "-f")
+                        {
+                            mes = mes.Remove(0, 2).TrimStart(' ');
+                            SendMessageToDialog(client, opt.Index, mes, "file");
+                        }
+                        else
+                        {
+                            SendMessageToDialog(client, opt.Index, mes);
+                        }
                     }
                 }
             };
@@ -151,7 +161,7 @@ namespace TeleWithVictorApi
             {
                 Console.Write("\n->");
                 var line = Console.ReadLine()?.Split(' ');
-                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, AddContactOptions, DeleteContactOptions, Quit, LogOutOptions>(line);
+                var parseResult = Parser.Default.ParseArguments<PrintOptions, SendOptions, SendFileOptions, AddContactOptions, DeleteContactOptions, Quit, LogOutOptions>(line);
 
                 parseResult.
                     WithParsed<Quit>(quit => isRun = false).
@@ -198,7 +208,16 @@ namespace TeleWithVictorApi
             await client.DialogsService.FillDialog(dialog.DialogName, dialog.Peer, dialog.Id);
             int count = client.DialogsService.Dialog.Messages.Count();
             Console.WriteLine(client.DialogsService.Dialog.Messages.ElementAt(count - 1));
-            
+        }
+
+        static async Task SendMessageToDialog(IServiceTl client, int index, string path, string caption)
+        {
+            var dialog = client.DialogsService.DialogList.ElementAt(index);
+            await client.DialogsService.FillDialog(dialog.DialogName, dialog.Peer, dialog.Id);
+            await client.SendingService.SendFile(dialog.Peer, dialog.Id, path, caption);
+            Console.WriteLine("File otpravlen");
+            //int count = client.DialogsService.Dialog.Messages.Count();
+            //Console.WriteLine(client.DialogsService.Dialog.Messages.ElementAt(count - 1));
         }
 
         static async Task SendMessageToContact(IServiceTl client, int index, string text)

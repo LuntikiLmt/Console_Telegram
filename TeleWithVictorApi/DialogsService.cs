@@ -33,7 +33,18 @@ namespace TeleWithVictorApi
             switch (peer)
             {
                 case Peer.User:
-                    history = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = id }, 0, -1, 50);
+                    try
+                    {
+                        var dialsdf = (TlDialogs)await _client.GetUserDialogsAsync();
+                        var asdasd = dialsdf.Users.Lists.OfType<TlUser>().FirstOrDefault(c => c.Id == id);
+                        history = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = asdasd.Id, AccessHash = (long)asdasd.AccessHash}, 0, -1, 50);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                    
                     break;
 
                 case Peer.Chat:
@@ -71,7 +82,24 @@ namespace TeleWithVictorApi
         private void AddMsg(TlMessage message, List<IMessage> messages, string senderName)
         {
             var msg = _ioc.Resolve<IMessage>();
-            msg.Fill(senderName, message.Message, DateTimeService.TimeUnixToWindows(message.Date, true));
+            string text = "[File]";
+            if (message.Media != null)
+            {
+                switch (message.Media)
+                {
+                    case TlMessageMediaDocument document:
+                        text = $"{(document.Document as TlDocument).Attributes.Lists.OfType<TlDocumentAttributeFilename>().FirstOrDefault().FileName} {document.Caption}";
+                        break;
+                    case TlMessageMediaPhoto photo:
+                        text = $"[Photo] {photo.Caption}";
+                        break;
+                }
+            }
+            else
+            {
+                text = message.Message;
+            }
+            msg.Fill(senderName, text, DateTimeService.TimeUnixToWindows(message.Date, true));
             messages.Add(msg);
         }
 

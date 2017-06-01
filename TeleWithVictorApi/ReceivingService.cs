@@ -54,16 +54,18 @@ namespace TeleWithVictorApi
                             OnAddUnreadMessageFromChannel(channel.ElementAt(0).Title, (item.Message as TlMessage).Message, DateTimeService.TimeUnixToWindows((item.Message as TlMessage).Date, false));
                         }
                     }
-                    if (((updates.Updates.Lists[0] as TlUpdateNewMessage).Message as TlMessage).Media != null)
-                    {
-                        
-                    }
+                    //foreach (var item in updates.Updates.Lists.OfType<TlUpdateNewMessage>())
+                    //{
+                    //    (item.Message as TlMessage).
+                    //}
+                    
+                    
                     break;
 
                 case TlUpdateShortMessage shortMessage:
                     //SystemSounds.Beep.Play();
                     Console.Beep();
-                    OnAddUnreadMessageFromUser(shortMessage.UserId, shortMessage.Message, DateTimeService.TimeUnixToWindows(shortMessage.Date, false));
+                    OnAddUnreadMessageFromUser(shortMessage.UserId, shortMessage.Message, DateTimeService.TimeUnixToWindows(shortMessage.Date, true));
                     break;
 
                 //case TlUpdateShortChatMessage chatMessage:

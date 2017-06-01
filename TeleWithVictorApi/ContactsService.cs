@@ -38,10 +38,16 @@ namespace TeleWithVictorApi
 
         public async Task DeleteContact(int number)
         {
-            var req = new TlRequestDeleteContact
+            var contacts = new TlVector<TlAbsInputUser>();
+            contacts.Lists.Add((new TlInputUser() { UserId = Contacts.ToList()[number].Id }));
+            var req = new TlRequestDeleteContacts()
             {
-                Id = new TlInputUser() {  UserId = Contacts.ToList()[number].Id }
+                Id = contacts
             };
+            //var req = new TlRequestDeleteContact
+            //{
+            //    Id = new TlInputUser {  UserId = Contacts.ToList()[number].Id }
+            //};
             await _client.SendRequestAsync<TlLink>(req);
             FillContacts();
         }

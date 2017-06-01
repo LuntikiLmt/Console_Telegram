@@ -8,16 +8,25 @@ using System.Threading.Tasks;
 
 namespace TeleWithVictorApi
 {
-    interface ISendOptions
+    interface IHaveDCIndexes
     {
-        [Option('m', "message", HelpText = "Sending message", Required = true, Separator = ' ')]
-        IEnumerable<string> Message { get; set; }
-
         [Option('d', "dialog", Default = -1, HelpText = "Send to dialog")]
         int DialogIndex { get; set; }
 
         [Option('c', "contact", Default = -1, HelpText = "Send to contact")]
         int ContactIndex { get; set; }
+    }
+
+    interface ISendOptions : IHaveDCIndexes
+    {
+        [Option('m', "message", HelpText = "Sending message", Required = true, Separator = ' ')]
+        IEnumerable<string> Message { get; set; }
+    }
+
+    interface ISendFileOptions : IHaveDCIndexes
+    {
+        [Option('f', "file", HelpText = "Sending file", Required = true, Separator = ' ')]
+        string Path { get; set; }
     }
 
     interface IPrintOptions
@@ -59,6 +68,14 @@ namespace TeleWithVictorApi
         public IEnumerable<string> Message { get; set; }
         public int DialogIndex { get; set; }
         public int ContactIndex { get; set; }
+    }
+
+    [Verb("sendFile", HelpText = "Send file to somebody")]
+    class SendFileOptions : ISendFileOptions
+    {
+        public int DialogIndex { get; set; }
+        public int ContactIndex { get; set; }
+        public string Path { get; set; }
     }
 
     [Verb("print", HelpText = "Print list of 1) contacts 2) dialogs 3) messages in certain dialog 4) unread messages")]
