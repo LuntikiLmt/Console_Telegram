@@ -68,7 +68,7 @@ namespace TeleWithVictorApi
     public interface ISendingService
     {
         Task SendTextMessage(Peer peer, int id, string msg);
-        Task SendFile();
+        Task SendFile(Peer peer, int id, string path, string caption);
     }
 
     public interface IReceivingService

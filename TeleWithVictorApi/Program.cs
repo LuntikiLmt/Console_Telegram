@@ -13,8 +13,30 @@ namespace TeleWithVictorApi
 {
     class Program
     {
+        public static void sdfdf()
+        {
+            ConsoleKeyInfo cki;
+
+            Console.WriteLine("Press any combination of CTL, ALT, and SHIFT, and a console key.");
+            Console.WriteLine("Press the Escape (Esc) key to quit: \n");
+            do
+            {
+                cki = Console.ReadKey();
+                Console.Write(" --- You pressed ");
+                if ((cki.Modifiers & ConsoleModifiers.Alt) != 0) Console.Write("ALT+");
+                if ((cki.Modifiers & ConsoleModifiers.Shift) != 0) Console.Write("SHIFT+");
+                if ((cki.Modifiers & ConsoleModifiers.Control) != 0) Console.Write("CTRL+");
+                Console.WriteLine(cki.Key.ToString());
+            } while (cki.Key != ConsoleKey.Escape);
+        }
+
         static void Main(string[] args)
         {
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                eventArgs.Cancel = true;
+            };
+
             var ioc = new SimpleIoC();
 
             #region RegisterIoC
@@ -37,6 +59,27 @@ namespace TeleWithVictorApi
             //Start(client).Wait();
             Authorize(client);
             client.FillAsync().Wait();
+
+            client.ReceivingService.OnAddUnreadMessageFromUser += (id, text, dateTime) =>
+            {
+                var message = ioc.Resolve<IMessage>();
+                var user = client.ContactsService.Contacts.FirstOrDefault(c => c.Id == id);
+                if (user?.ToString() == client.DialogsService.Dialog.DialogName)
+                {
+                    message.Fill(user?.ToString(), text, dateTime);
+                    Console.WriteLine(message);
+                }
+            };
+
+            client.ReceivingService.OnAddUnreadMessageFromChannel += (title, text, dateTime) =>
+            {
+                if (title == client.DialogsService.Dialog.DialogName)
+                {
+                    var message = ioc.Resolve<IMessage>();
+                    message.Fill(title, text, dateTime);
+                    Console.WriteLine(message);
+                }
+            };
 
             Action<SendOptions> Send = async opt =>
             {
@@ -69,7 +112,7 @@ namespace TeleWithVictorApi
                 }
             };
 
-            Action<PrintOptions> Print = async opt =>
+            Action<PrintOptions> Print = opt =>
             {
                 if (opt.Contacts)
                 {
@@ -87,11 +130,18 @@ namespace TeleWithVictorApi
                 {
                     try
                     {
-                        await PrintDialogMessages(client, opt.Index);
+                        PrintDialogMessages(client, opt.Index).Wait();
                     }
                     catch (ArgumentOutOfRangeException e)
                     {
                         Console.WriteLine("Number is incorrect!");
+                    }
+                    while (true)
+                    {
+                        string mes = Console.ReadLine();
+                        if (mes == null)
+                            break;
+                        SendMessageToDialog(client, opt.Index, mes).Wait();
                     }
                 }
             };
@@ -143,9 +193,12 @@ namespace TeleWithVictorApi
 
         static async Task SendMessageToDialog(IServiceTl client, int index, string text)
         {
-            var dialogs = client.DialogsService.DialogList;
-            await client.SendingService.SendTextMessage(dialogs.ElementAt(index).Peer, dialogs.ElementAt(index).Id, text);
-            Console.WriteLine(text);
+            var dialog = client.DialogsService.DialogList.ElementAt(index);
+            await client.SendingService.SendTextMessage(dialog.Peer, dialog.Id, text);
+            await client.DialogsService.FillDialog(dialog.DialogName, dialog.Peer, dialog.Id);
+            int count = client.DialogsService.Dialog.Messages.Count();
+            Console.WriteLine(client.DialogsService.Dialog.Messages.ElementAt(count - 1));
+            
         }
 
         static async Task SendMessageToContact(IServiceTl client, int index, string text)
@@ -167,7 +220,6 @@ namespace TeleWithVictorApi
             {
                 Console.WriteLine(item);
             }
-            Console.Write("\n->");
         }
 
         static void PrintDialogs(IServiceTl client)
@@ -187,7 +239,7 @@ namespace TeleWithVictorApi
             Console.WriteLine("\nContacts:");
             foreach (var item in client.ContactsService.Contacts)
             {
-                Console.WriteLine(index + " " + item);
+                Console.WriteLine($"{index} {item}");
                 index++;
             }
         }
