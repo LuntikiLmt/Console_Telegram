@@ -48,7 +48,7 @@ namespace TeleWithVictorApi
             //{
             //    Id = new TlInputUser {  UserId = Contacts.ToList()[number].Id }
             //};
-            await _client.SendRequestAsync<TlLink>(req);
+            await _client.SendRequestAsync<bool>(req);
             FillContacts();
         }
 
