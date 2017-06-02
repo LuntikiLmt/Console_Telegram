@@ -76,7 +76,6 @@ namespace TeleWithVictorApi
             ReceivingService = _ioc.Resolve<IReceivingService>();
             ReceivingService.OnUpdateDialogs += ReceivingService_OnUpdateDialogs;
             ReceivingService.OnUpdateContacts += ReceivingService_OnUpdateContacts;
-            ReceivingService.OnAddUnreadMessageFromUser += ReceivingService_OnAddUnreadMessageFromUser;
             ReceivingService.OnAddUnreadMessageFromChannel += ReceivingService_OnAddUnreadMessageFromChannel;
 
             await ContactsService.FillContacts();
@@ -87,15 +86,7 @@ namespace TeleWithVictorApi
         {
             var message = _ioc.Resolve<IMessage>();
             message.Fill(title, text, dateTime);
-            ReceivingService.UnreadMessages.Add(message);
-        }
-
-        private void ReceivingService_OnAddUnreadMessageFromUser(int id, string text, DateTime dateTime)
-        {
-            var message = _ioc.Resolve<IMessage>();
-            var user = ContactsService.Contacts.FirstOrDefault(c => c.Id == id);
-            message.Fill(user?.ToString() ?? "Unknown sender", text, dateTime);
-            ReceivingService.UnreadMessages.Add(message);
+            ReceivingService.UnreadMessages.Push(message);
         }
 
         //private void ReceivingService_OnAddUnreadMessage(int id, string text, DateTime dateTime,  int? chatId)

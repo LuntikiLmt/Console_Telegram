@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TelegramClient.Core;
 using TelegramClient.Core.ApiServies;
 using TelegramClient.Entities.TL;
+using TelegramClient.Entities.TL.Messages;
 using TelegramClient.Entities.TL.Updates;
 
 namespace TeleWithVictorApi
@@ -14,15 +15,17 @@ namespace TeleWithVictorApi
     class ReceivingService : IReceivingService
     {
         private readonly ITelegramClient _client;
+        private readonly SimpleIoC _ioc;
 
-        public List<IMessage> UnreadMessages { get; private set; } = new List<IMessage>();
+        public Stack<IMessage> UnreadMessages { get; } = new Stack<IMessage>();
         public event Action OnUpdateDialogs;
         public event Action OnUpdateContacts;
-        public event Action<int, string, DateTime> OnAddUnreadMessageFromUser;
+        public event Action<int, IMessage> OnAddUnreadMessageFromUser;
         public event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
 
         public ReceivingService(SimpleIoC ioc)
         {
+            _ioc = ioc;
             _client = ioc.Resolve<ITelegramClient>();
             _client.Updates.RecieveUpdates += Updates_RecieveUpdates;
         }
@@ -36,36 +39,36 @@ namespace TeleWithVictorApi
 
                 case TlUpdates updates:
                     SystemSounds.Beep.Play();
-                    if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateDeleteMessages)) != 0)
+                    foreach (var item in updates.Updates.Lists)
                     {
-                        OnUpdateDialogs();
-                    }
-                    if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateContactLink)) != 0)
-                    {
-                        OnUpdateDialogs();
-                        OnUpdateContacts();
-                    }
-                    if (updates.Updates.Lists.Count(item => item.GetType() == typeof(TlUpdateNewChannelMessage)) != 0)
-                    {
-                        var channel = updates.Chats.Lists.OfType<TlChannel>();
-                        var mes = updates.Updates.Lists.OfType<TlUpdateNewChannelMessage>();
-                        foreach (TlUpdateNewChannelMessage item in mes)
+                        switch (item)
                         {
-                            OnAddUnreadMessageFromChannel(channel.ElementAt(0).Title, (item.Message as TlMessage).Message, DateTimeService.TimeUnixToWindows((item.Message as TlMessage).Date, false));
+                            case TlUpdateDeleteMessages updateDeleteMessages:
+                                OnUpdateDialogs?.Invoke();
+                                break;
+                            case TlUpdateContactLink updateContactLink:
+                                OnUpdateDialogs?.Invoke();
+                                OnUpdateContacts?.Invoke();
+                                break;
+                            case TlUpdateNewChannelMessage updateNewChannelMessage:
+                                var channel = updates.Chats.Lists.OfType<TlChannel>();
+                                foreach (TlUpdateNewChannelMessage message in updates.Updates.Lists.OfType<TlUpdateNewChannelMessage>())
+                                {
+                                    OnAddUnreadMessageFromChannel?.Invoke(channel.ElementAt(0).Title,
+                                        (message.Message as TlMessage).Message,
+                                        DateTimeService.TimeUnixToWindows((message.Message as TlMessage).Date, false));
+                                }
+                                break;
+                            case TlUpdateNewMessage updateNewMessage:
+                                break;
                         }
                     }
-                    //foreach (var item in updates.Updates.Lists.OfType<TlUpdateNewMessage>())
-                    //{
-                    //    (item.Message as TlMessage).
-                    //}
-                    
-                    
                     break;
 
                 case TlUpdateShortMessage shortMessage:
-                    //SystemSounds.Beep.Play();
                     Console.Beep();
-                    OnAddUnreadMessageFromUser(shortMessage.UserId, shortMessage.Message, DateTimeService.TimeUnixToWindows(shortMessage.Date, true));
+                    AddNewMessageToUnread(shortMessage.UserId, shortMessage.Message,
+                        DateTimeService.TimeUnixToWindows(shortMessage.Date, true)).Start();
                     break;
 
                 //case TlUpdateShortChatMessage chatMessage:
@@ -78,6 +81,18 @@ namespace TeleWithVictorApi
                     SystemSounds.Hand.Play();
                     break;
             }
+        }
+
+        private async Task AddNewMessageToUnread(int id, string text, DateTime dateTime)
+        {
+            var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
+            var user = dialogs.Users.Lists.OfType<TlUser>().FirstOrDefault(c => c.Id == id);
+            
+            var message = _ioc.Resolve<IMessage>();
+            
+            message.Fill($"{user?.FirstName} {user?.LastName}", text, dateTime);
+            UnreadMessages.Push(message);
+            OnAddUnreadMessageFromUser?.Invoke(id, message);
         }
     }
 }

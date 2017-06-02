@@ -34,14 +34,20 @@ namespace TeleWithVictorApi
         [Option('d', "dialogs", HelpText = "Dialog list", Default = false)]
         bool Dialogs { get; set; }
 
-        [Option('u', "unread", HelpText = "Unread messages", Default = false)]
-        bool UnreadMessages { get; set; }
-
         [Option('c', "contacts", HelpText = "Contact list", Default = false)]
         bool Contacts { get; set; }
 
-        [Option('m', "messages", HelpText = "Messages in dialog", Default = -1)]
+        [Option('u', "unread", HelpText = "Unread messages", Default = false)]
+        bool UnreadMessages { get; set; }
+    }
+
+    interface IEnterDialogOptions
+    {
+        [Value(0, HelpText = "Dialog number", Required = true)]
         int Index { get; set; }
+
+        [Option('c', "contact", HelpText = "Is contact index", Default = false)]
+        bool IsContact { get; set; }
     }
 
     interface IDeleteContactOptions
@@ -78,12 +84,11 @@ namespace TeleWithVictorApi
         public string Path { get; set; }
     }
 
-    [Verb("print", HelpText = "Print list of 1) contacts 2) dialogs 3) messages in certain dialog 4) unread messages")]
+    [Verb("print", HelpText = "Print list of dialogs, contacts or/and unread messages")]
     class PrintOptions : IPrintOptions
     {
         public bool Dialogs { get; set; }
         public bool Contacts { get; set; }
-        public int Index { get; set; }
         public bool UnreadMessages { get; set; }
     }
 
@@ -99,6 +104,13 @@ namespace TeleWithVictorApi
         public string Number { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+    }
+
+    [Verb("enterDialog", HelpText = "Enter dialog")]
+    class EnterDialogOptions : IEnterDialogOptions
+    {
+        public int Index { get; set; }
+        public bool IsContact { get; set; }
     }
 
     [Verb("logout", HelpText = "Log out")]

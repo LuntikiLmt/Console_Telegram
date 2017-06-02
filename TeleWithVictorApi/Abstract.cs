@@ -33,7 +33,7 @@ namespace TeleWithVictorApi
         void Fill(string senderName, string text, DateTime date);
     }
 
-    public interface IDialog
+    public interface IDialog : IHaveId
     {
         string DialogName { get; }
         IEnumerable<IMessage> Messages { get; }
@@ -73,10 +73,10 @@ namespace TeleWithVictorApi
 
     public interface IReceivingService
     {
-        List<IMessage> UnreadMessages { get; }
+        Stack<IMessage> UnreadMessages { get; }
         event Action OnUpdateDialogs;
         event Action OnUpdateContacts;
-        event Action<int, string, DateTime> OnAddUnreadMessageFromUser;
+        event Action<int, IMessage> OnAddUnreadMessageFromUser;
         event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
     }
 

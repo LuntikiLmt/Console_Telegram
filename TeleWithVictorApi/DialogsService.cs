@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TelegramClient.Core;
 using TelegramClient.Entities.TL;
@@ -25,36 +24,36 @@ namespace TeleWithVictorApi
 
         public async Task FillDialog(string dialogName, Peer peer, int id)
         {
-            List<IMessage> _messages = new List<IMessage>();
+            Stack<IMessage> messages = new Stack<IMessage>();
 
             Dialog = _ioc.Resolve<IDialog>();
             dynamic history;
-
+            var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
             switch (peer)
             {
                 case Peer.User:
                     try
                     {
-                        var dialsdf = (TlDialogs)await _client.GetUserDialogsAsync();
-                        var asdasd = dialsdf.Users.Lists.OfType<TlUser>().FirstOrDefault(c => c.Id == id);
-                        history = await _client.GetHistoryAsync(new TlInputPeerUser { UserId = asdasd.Id, AccessHash = (long)asdasd.AccessHash}, 0, -1, 50);
+                        var user = dialogs.Users.Lists.OfType<TlUser>().FirstOrDefault(c => c.Id == id);
+                        history = await _client.GetHistoryAsync(
+                            new TlInputPeerUser {UserId = user.Id, AccessHash = (long) user.AccessHash}, 0, -1, 50);
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
                         throw;
                     }
-                    
                     break;
 
                 case Peer.Chat:
-                    history = await _client.GetHistoryAsync(new TlInputPeerChat { ChatId = id }, 0, -1, 50);
+                    history = await _client.GetHistoryAsync(new TlInputPeerChat {ChatId = id}, 0, -1, 50);
                     break;
 
                 default:
-                    var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
                     var channel = dialogs.Chats.Lists.OfType<TlChannel>().FirstOrDefault(c => c.Id == id);
-                    history = await _client.GetHistoryAsync(new TlInputPeerChannel { ChannelId = channel.Id, AccessHash = (long)channel.AccessHash }, 0, -1, 50);
+                    history = await _client.GetHistoryAsync(
+                        new TlInputPeerChannel {ChannelId = channel.Id, AccessHash = (long) channel.AccessHash}, 0, -1,
+                        50);
                     break;
             }
 
@@ -72,14 +71,14 @@ namespace TeleWithVictorApi
                             break;
                         }
                     }
-                    AddMsg(msg, _messages, userFrom == null ? dialogName : $"{userFrom.FirstName} {userFrom.LastName}");
+                    AddMsg(msg, messages, userFrom == null ? dialogName : $"{userFrom.FirstName} {userFrom.LastName}");
                 }
             }
-
-            Dialog.Fill(dialogName, _messages.Reverse<IMessage>());
+            Dialog.Fill(dialogName, messages);
+            Dialog.Id = id;
         }
 
-        private void AddMsg(TlMessage message, List<IMessage> messages, string senderName)
+        private void AddMsg(TlMessage message, Stack<IMessage> messages, string senderName)
         {
             var msg = _ioc.Resolve<IMessage>();
             string text = "[File]";
@@ -100,7 +99,7 @@ namespace TeleWithVictorApi
                 text = message.Message;
             }
             msg.Fill(senderName, text, DateTimeService.TimeUnixToWindows(message.Date, true));
-            messages.Add(msg);
+            messages.Push(msg);
         }
 
         public async Task FillDialogList()
@@ -156,6 +155,7 @@ namespace TeleWithVictorApi
     {
         public string DialogName { get; private set; }
         public IEnumerable<IMessage> Messages { get; private set; }
+        public int Id { get; set; }
 
         public void Fill(string dialogName, IEnumerable<IMessage> messages)
         {

@@ -15,26 +15,26 @@ namespace TeleWithVictorApi
     class SendingService : ISendingService
     {
         private readonly ITelegramClient _client;
+        private SimpleIoC _ioc;
+
+        public event Action<IMessage> OnSendMessage;
 
         public SendingService(SimpleIoC ioc)
         {
             _client = ioc.Resolve<ITelegramClient>();
-        }
-
-        public Task SendFile()
-        {
-            throw new NotImplementedException();
+            _ioc = ioc;
         }
 
         public async Task SendTextMessage(Peer peer, int id, string msg)
         {
             TlAbsInputPeer receiver = await GetInputPeer(peer, id);
             await _client.SendMessageAsync(receiver, msg);
+            var message = _ioc.Resolve<IMessage>();
         }
 
         public async Task SendFile(Peer peer, int id, string path, string caption)
         {
-            var reciever = await GetInputPeer(peer, id);
+            var receiver = await GetInputPeer(peer, id);
             path = path.Trim('"');
             var str = path.Split('\\');
             using (var stream = new FileStream(path, FileMode.Open))
@@ -45,10 +45,9 @@ namespace TeleWithVictorApi
                 {
                     var fileResult = await _client.UploadFile(str[str.Length - 1], new StreamReader(stream));
                     var attr = new TlVector<TlAbsDocumentAttribute>();
-                    var filename = new TlDocumentAttributeFilename();
-                    filename.FileName = str[str.Length - 1];
+                    var filename = new TlDocumentAttributeFilename { FileName = str[str.Length - 1] };
                     attr.Lists.Add(filename);
-                    await _client.SendUploadedDocument(reciever, fileResult, caption, "", attr);
+                    await _client.SendUploadedDocument(receiver, fileResult, caption, String.Empty, attr);
                 }
                 catch (Exception e)
                 {
