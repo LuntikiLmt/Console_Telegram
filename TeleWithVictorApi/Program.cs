@@ -224,9 +224,9 @@ namespace TeleWithVictorApi
                 dialogTitle = dialog.DialogName;
             }
             await client.SendingService.SendTextMessage(peer, id, text);
-            //await client.DialogsService.FillDialog(dialogTitle, peer, id);
-            //int count = client.DialogsService.Dialog.Messages.Count();
-            //Console.WriteLine(client.DialogsService.Dialog.Messages.ElementAt(count - 1));
+            await client.DialogsService.FillDialog(dialogTitle, peer, id);
+            int count = client.DialogsService.Dialog.Messages.Count();
+            Console.WriteLine(client.DialogsService.Dialog.Messages.ElementAt(count - 1));
             //может быть так, что создался новый диалог, поэтому нужно обновить список
             if (client.DialogsService.DialogList.FirstOrDefault(c => c.Id == id) == null)
             {
