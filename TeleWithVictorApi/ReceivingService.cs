@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Media;
 using System.Text;
@@ -9,6 +10,7 @@ using TelegramClient.Core.ApiServies;
 using TelegramClient.Entities.TL;
 using TelegramClient.Entities.TL.Messages;
 using TelegramClient.Entities.TL.Updates;
+using TelegramClient.Entities.TL.Upload;
 
 namespace TeleWithVictorApi
 {
@@ -30,7 +32,7 @@ namespace TeleWithVictorApi
             _client.Updates.RecieveUpdates += Updates_RecieveUpdates;
         }
 
-        private void Updates_RecieveUpdates(TlAbsUpdates update)
+        private async void Updates_RecieveUpdates(TlAbsUpdates update)
         {
             switch (update)
             {
@@ -46,10 +48,12 @@ namespace TeleWithVictorApi
                             case TlUpdateDeleteMessages updateDeleteMessages:
                                 OnUpdateDialogs?.Invoke();
                                 break;
+
                             case TlUpdateContactLink updateContactLink:
                                 OnUpdateDialogs?.Invoke();
                                 OnUpdateContacts?.Invoke();
                                 break;
+
                             case TlUpdateNewChannelMessage updateNewChannelMessage:
                                 var channel = updates.Chats.Lists.OfType<TlChannel>();
                                 foreach (TlUpdateNewChannelMessage message in updates.Updates.Lists.OfType<TlUpdateNewChannelMessage>())
@@ -59,7 +63,62 @@ namespace TeleWithVictorApi
                                         DateTimeService.TimeUnixToWindows((message.Message as TlMessage).Date, false));
                                 }
                                 break;
+
                             case TlUpdateNewMessage updateNewMessage:
+                                Directory.CreateDirectory($"{Directory.GetCurrentDirectory()}\\Downloads");
+
+                                switch ((updateNewMessage.Message as TlMessage).Media)
+                                {
+                                    case TlMessageMediaDocument document:
+                                        var file = document.Document as TlDocument;
+                                        var fileName = file.Attributes.Lists.OfType<TlDocumentAttributeFilename>().FirstOrDefault().FileName;
+
+                                        int blockNumber = file.Size % 1048576 == 0 ? file.Size / 1048576 : file.Size / 1048576 + 1;
+                                        List<byte> bytes = new List<byte>();
+                                        for (int i = 0; i < blockNumber; i++)
+                                        {
+                                            var resFile = await _client.GetFile(new TlInputDocumentFileLocation { Id = file.Id, AccessHash = file.AccessHash, Version = file.Version }, file.Size, i * 1048576);
+                                            bytes.AddRange(resFile.Bytes);
+                                        }
+
+                                        try
+                                        {
+                                            using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\{fileName}"))
+                                            {
+                                                await fs.WriteAsync(bytes.ToArray(), 0, bytes.Count);
+                                                fs.Close();
+                                                Console.WriteLine($"{fileName} successfully installed in {fs.Name}");
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine($"saving of {fileName} failed!");
+                                        }
+                                        break;
+
+                                    case TlMessageMediaPhoto photo:
+                                        var filePhoto = photo.Photo as TlPhoto;
+                                        var photoInfo = filePhoto.Sizes.Lists.OfType<TlPhotoSize>().Last();
+                                        var tf = (TlFileLocation)photoInfo.Location;
+                                        var resFilePhoto = await _client.GetFile(new TlInputFileLocation { LocalId = tf.LocalId, Secret = tf.Secret, VolumeId = tf.VolumeId}, 0);
+                                        try
+                                        {
+                                            var date = DateTimeService.TimeUnixToWindows((updateNewMessage.Message as TlMessage).Date, true).ToString();
+                                            date = date.Replace(':', '-');
+                                            using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\ConsTelegram_{date}.png"))
+                                            {
+                                                await fs.WriteAsync(resFilePhoto.Bytes, 0, resFilePhoto.Bytes.Length);
+                                                fs.Close();
+                                                Console.WriteLine($"photo successfully installed in {fs.Name}");
+                                            }
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Console.WriteLine($"saving of photo failed!");
+                                        }
+                                        break;
+                                }
+                                
                                 break;
                         }
                     }
