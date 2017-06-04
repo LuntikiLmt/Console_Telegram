@@ -32,6 +32,23 @@ namespace TeleWithVictorApi
             _client.Updates.RecieveUpdates += Updates_RecieveUpdates;
         }
 
+        async Task WriteToFile(byte[] bytes, string fileName)
+        {
+            try
+            {
+                using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\{fileName}"))
+                {
+                    await fs.WriteAsync(bytes, 0, bytes.Length);
+                    fs.Close();
+                    Console.WriteLine($"{fileName} successfully installed in {fs.Name}");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"saving of {fileName} failed!");
+            }
+        }
+
         private async void Updates_RecieveUpdates(TlAbsUpdates update)
         {
             switch (update)
@@ -81,19 +98,7 @@ namespace TeleWithVictorApi
                                             bytes.AddRange(resFile.Bytes);
                                         }
 
-                                        try
-                                        {
-                                            using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\{fileName}"))
-                                            {
-                                                await fs.WriteAsync(bytes.ToArray(), 0, bytes.Count);
-                                                fs.Close();
-                                                Console.WriteLine($"{fileName} successfully installed in {fs.Name}");
-                                            }
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.WriteLine($"saving of {fileName} failed!");
-                                        }
+                                        WriteToFile(bytes.ToArray(), fileName);
                                         break;
 
                                     case TlMessageMediaPhoto photo:
@@ -101,21 +106,12 @@ namespace TeleWithVictorApi
                                         var photoInfo = filePhoto.Sizes.Lists.OfType<TlPhotoSize>().Last();
                                         var tf = (TlFileLocation)photoInfo.Location;
                                         var resFilePhoto = await _client.GetFile(new TlInputFileLocation { LocalId = tf.LocalId, Secret = tf.Secret, VolumeId = tf.VolumeId}, 0);
-                                        try
-                                        {
-                                            var date = DateTimeService.TimeUnixToWindows((updateNewMessage.Message as TlMessage).Date, true).ToString();
-                                            date = date.Replace(':', '-');
-                                            using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\ConsTelegram_{date}.png"))
-                                            {
-                                                await fs.WriteAsync(resFilePhoto.Bytes, 0, resFilePhoto.Bytes.Length);
-                                                fs.Close();
-                                                Console.WriteLine($"photo successfully installed in {fs.Name}");
-                                            }
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.WriteLine($"saving of photo failed!");
-                                        }
+
+                                        var date = DateTimeService.TimeUnixToWindows((updateNewMessage.Message as TlMessage).Date, true).ToString();
+                                        date = date.Replace(':', '-');
+                                        string photoName = $"ConsoleTelegram_{date}.png";
+
+                                        WriteToFile(resFilePhoto.Bytes, photoName);
                                         break;
                                 }
                                 
