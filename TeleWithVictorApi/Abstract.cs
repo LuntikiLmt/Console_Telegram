@@ -58,7 +58,7 @@ namespace TeleWithVictorApi
 
     public interface IDialogsService
     {
-        IDialog Dialog { get; }
+        IDialog Dialog { get; set; }
         Task FillDialog(string dialogName, Peer peer, int id);//TlAbsPeer peer - тип диалога: chat, channel, user
 
         IEnumerable<IDialogShort> DialogList { get; }
@@ -76,8 +76,8 @@ namespace TeleWithVictorApi
         Stack<IMessage> UnreadMessages { get; }
         event Action OnUpdateDialogs;
         event Action OnUpdateContacts;
-        event Action<int, IMessage> OnAddUnreadMessageFromUser;
-        event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
+        event Action<int, IMessage> OnAddUnreadMessage;
+        //event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
     }
 
     public interface IServiceTl : IAuthorization
@@ -94,6 +94,7 @@ namespace TeleWithVictorApi
     {
         void LogOut();
         bool Authorize();
+        bool IsUserAuthorized { get; }
         Task EnterPhoneNumber(string number);
         Task<bool> EnterIncomingCode(string code);
     }

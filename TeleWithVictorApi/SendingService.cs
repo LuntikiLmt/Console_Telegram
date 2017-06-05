@@ -41,18 +41,11 @@ namespace TeleWithVictorApi
             {
                 //var fileResult = await _client.UploadFile(str[str.Length - 1], new StreamReader(stream));
                 //await _client.SendUploadedPhoto(reciever, fileResult, caption);
-                try
-                {
-                    var fileResult = await _client.UploadFile(str[str.Length - 1], new StreamReader(stream));
-                    var attr = new TlVector<TlAbsDocumentAttribute>();
-                    var filename = new TlDocumentAttributeFilename { FileName = str[str.Length - 1] };
-                    attr.Lists.Add(filename);
-                    await _client.SendUploadedDocument(receiver, fileResult, caption, String.Empty, attr);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Sending failed! Try again");
-                }
+                var fileResult = await _client.UploadFile(str[str.Length - 1], new StreamReader(stream));
+                var attr = new TlVector<TlAbsDocumentAttribute>();
+                var filename = new TlDocumentAttributeFilename { FileName = str[str.Length - 1] };
+                attr.Lists.Add(filename);
+                await _client.SendUploadedDocument(receiver, fileResult, caption, String.Empty, attr);
 
             }
         }

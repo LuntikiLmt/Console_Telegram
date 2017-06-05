@@ -34,6 +34,7 @@ namespace TeleWithVictorApi
             }
         }
 
+        public bool IsUserAuthorized => _client.IsUserAuthorized();
         public bool Authorize()
         {
             _client.ConnectAsync().Wait();
@@ -76,7 +77,6 @@ namespace TeleWithVictorApi
             ReceivingService = _ioc.Resolve<IReceivingService>();
             ReceivingService.OnUpdateDialogs += ReceivingService_OnUpdateDialogs;
             ReceivingService.OnUpdateContacts += ReceivingService_OnUpdateContacts;
-            ReceivingService.OnAddUnreadMessageFromChannel += ReceivingService_OnAddUnreadMessageFromChannel;
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();

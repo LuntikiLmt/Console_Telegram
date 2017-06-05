@@ -13,7 +13,7 @@ namespace TeleWithVictorApi
         private readonly ITelegramClient _client;
         private readonly SimpleIoC _ioc;
         
-        public IDialog Dialog { get; private set; }
+        public IDialog Dialog { get; set; }
         public IEnumerable<IDialogShort> DialogList { get; private set; }
 
         public DialogsService(SimpleIoC ioc)
@@ -84,15 +84,7 @@ namespace TeleWithVictorApi
             string text = "[File]";
             if (message.Media != null)
             {
-                switch (message.Media)
-                {
-                    case TlMessageMediaDocument document:
-                        text = $"{(document.Document as TlDocument).Attributes.Lists.OfType<TlDocumentAttributeFilename>().FirstOrDefault().FileName} {document.Caption}";
-                        break;
-                    case TlMessageMediaPhoto photo:
-                        text = $"[Photo] {photo.Caption}";
-                        break;
-                }
+                text = GetTitleFromFile(message);
             }
             else
             {
@@ -100,6 +92,21 @@ namespace TeleWithVictorApi
             }
             msg.Fill(senderName, text, DateTimeService.TimeUnixToWindows(message.Date, true));
             messages.Push(msg);
+        }
+
+        public static string GetTitleFromFile(TlMessage message)
+        {
+            string text = String.Empty;
+            switch (message.Media)
+            {
+                case TlMessageMediaDocument document:
+                    text = $"{(document.Document as TlDocument).Attributes.Lists.OfType<TlDocumentAttributeFilename>().FirstOrDefault().FileName} {document.Caption}";
+                    break;
+                case TlMessageMediaPhoto photo:
+                    text = $"[Photo] {photo.Caption}";
+                    break;
+            }
+            return text;
         }
 
         public async Task FillDialogList()
@@ -120,7 +127,7 @@ namespace TeleWithVictorApi
                         var user = dialogs.Users.Lists
                             .OfType<TlUser>()
                             .FirstOrDefault(c => c.Id == id);
-                        title = user?.FirstName + " " + user?.LastName;
+                        title = $"{user?.FirstName} {user?.LastName}";
                         break;
                     case TlPeerChannel peerChannel:
                         id = peerChannel.ChannelId;

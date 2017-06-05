@@ -22,31 +22,14 @@ namespace TeleWithVictorApi
         public Stack<IMessage> UnreadMessages { get; } = new Stack<IMessage>();
         public event Action OnUpdateDialogs;
         public event Action OnUpdateContacts;
-        public event Action<int, IMessage> OnAddUnreadMessageFromUser;
-        public event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
+        public event Action<int, IMessage> OnAddUnreadMessage;
+        //public event Action<string, string, DateTime> OnAddUnreadMessageFromChannel;
 
         public ReceivingService(SimpleIoC ioc)
         {
             _ioc = ioc;
             _client = ioc.Resolve<ITelegramClient>();
             _client.Updates.RecieveUpdates += Updates_RecieveUpdates;
-        }
-
-        async Task WriteToFile(byte[] bytes, string fileName)
-        {
-            try
-            {
-                using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\{fileName}"))
-                {
-                    await fs.WriteAsync(bytes, 0, bytes.Length);
-                    fs.Close();
-                    Console.WriteLine($"{fileName} successfully installed in {fs.Name}");
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"saving of {fileName} failed!");
-            }
         }
 
         private async void Updates_RecieveUpdates(TlAbsUpdates update)
@@ -57,6 +40,9 @@ namespace TeleWithVictorApi
                     break;
 
                 case TlUpdates updates:
+                    int id;
+                    string text;
+                    DateTime time;
                     SystemSounds.Beep.Play();
                     foreach (var item in updates.Updates.Lists)
                     {
@@ -72,16 +58,22 @@ namespace TeleWithVictorApi
                                 break;
 
                             case TlUpdateNewChannelMessage updateNewChannelMessage:
-                                var channel = updates.Chats.Lists.OfType<TlChannel>();
-                                foreach (TlUpdateNewChannelMessage message in updates.Updates.Lists.OfType<TlUpdateNewChannelMessage>())
-                                {
-                                    OnAddUnreadMessageFromChannel?.Invoke(channel.ElementAt(0).Title,
-                                        (message.Message as TlMessage).Message,
-                                        DateTimeService.TimeUnixToWindows((message.Message as TlMessage).Date, false));
-                                }
+                                var tlMessage = updateNewChannelMessage.Message as TlMessage;
+                                text = tlMessage?.Message;
+                                time =
+                                    DateTimeService.TimeUnixToWindows(tlMessage.Date, true);
+                                id = GetId(tlMessage);
+                                
+                                AddNewMessageToUnread(id, text, time);
+                                
                                 break;
 
                             case TlUpdateNewMessage updateNewMessage:
+                                id = GetId(updateNewMessage.Message as TlMessage);
+                                text = DialogsService.GetTitleFromFile(updateNewMessage.Message as TlMessage);
+                                time = DateTimeService.TimeUnixToWindows((updateNewMessage.Message as TlMessage).Date, true);
+                                AddNewMessageToUnread(id, text, time);
+
                                 Directory.CreateDirectory($"{Directory.GetCurrentDirectory()}\\Downloads");
 
                                 switch ((updateNewMessage.Message as TlMessage).Media)
@@ -98,7 +90,7 @@ namespace TeleWithVictorApi
                                             bytes.AddRange(resFile.Bytes);
                                         }
 
-                                        WriteToFile(bytes.ToArray(), fileName);
+                                        ConsoleTelegramUI.WriteToFile(bytes.ToArray(), fileName);
                                         break;
 
                                     case TlMessageMediaPhoto photo:
@@ -111,9 +103,10 @@ namespace TeleWithVictorApi
                                         date = date.Replace(':', '-');
                                         string photoName = $"ConsoleTelegram_{date}.png";
 
-                                        WriteToFile(resFilePhoto.Bytes, photoName);
+                                        ConsoleTelegramUI.WriteToFile(resFilePhoto.Bytes, photoName);
                                         break;
                                 }
+
                                 
                                 break;
                         }
@@ -123,7 +116,7 @@ namespace TeleWithVictorApi
                 case TlUpdateShortMessage shortMessage:
                     Console.Beep();
                     AddNewMessageToUnread(shortMessage.UserId, shortMessage.Message,
-                        DateTimeService.TimeUnixToWindows(shortMessage.Date, true)).Start();
+                        DateTimeService.TimeUnixToWindows(shortMessage.Date, true));
                     break;
 
                 //case TlUpdateShortChatMessage chatMessage:
@@ -132,22 +125,68 @@ namespace TeleWithVictorApi
                 //    break;
 
                 default:
-                    Console.WriteLine("Default: "+update);
+                    Console.WriteLine($"Default: {update}");
                     SystemSounds.Hand.Play();
                     break;
             }
         }
 
-        private async Task AddNewMessageToUnread(int id, string text, DateTime dateTime)
+        private int GetId(TlMessage tlMessage)
+        {
+            int id = tlMessage.FromId ?? -1;
+            if (id == -1)
+            {
+                var receiver = tlMessage.ToId;
+                switch (receiver)
+                {
+                    case TlPeerChannel channel:
+                        id = channel.ChannelId;
+                        break;
+                    case TlPeerChat chat:
+                        id = chat.ChatId;
+                        break;
+                    case TlPeerUser user:
+                        id = user.UserId;
+                        break;
+                }
+            }
+            return id;
+        }
+
+        private async Task AddNewMessageToUnread(int senderId, string text, DateTime dateTime)
         {
             var dialogs = (TlDialogs)await _client.GetUserDialogsAsync();
-            var user = dialogs.Users.Lists.OfType<TlUser>().FirstOrDefault(c => c.Id == id);
-            
+            var dialog = dialogs.Dialogs.Lists[0];
+
+            string title = "Unknown sender";
+
+            switch (dialog.Peer)
+            {
+                case TlPeerUser peerUser:
+                    var user = dialogs.Users.Lists
+                        .OfType<TlUser>()
+                        .FirstOrDefault(c => c.Id == peerUser.UserId);
+                    title = $"{user?.FirstName} {user?.LastName}";
+                    break;
+                case TlPeerChannel peerChannel:
+                    var channel = dialogs.Chats.Lists
+                        .OfType<TlChannel>()
+                        .FirstOrDefault(c => c.Id == peerChannel.ChannelId);
+                    title = $"{channel.Title}";
+                    break;
+                case TlPeerChat peerChat:
+                    var chat = dialogs.Chats.Lists
+                        .OfType<TlChat>()
+                        .FirstOrDefault(c => c.Id == peerChat.ChatId);
+                    title = $"{chat.Title}";
+                    break;
+            }
+
             var message = _ioc.Resolve<IMessage>();
             
-            message.Fill($"{user?.FirstName} {user?.LastName}", text, dateTime);
+            message.Fill(title, text, dateTime);
             UnreadMessages.Push(message);
-            OnAddUnreadMessageFromUser?.Invoke(id, message);
+            OnAddUnreadMessage?.Invoke(senderId, message);
         }
     }
 }

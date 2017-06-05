@@ -46,7 +46,7 @@ namespace TeleWithVictorApi
         [Value(0, HelpText = "Dialog number", Required = true)]
         int Index { get; set; }
 
-        [Option('c', "contact", HelpText = "Is contact index", Default = false)]
+        [Option('c', "contact", HelpText = "If receiver is contact", Default = false)]
         bool IsContact { get; set; }
     }
 

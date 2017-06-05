@@ -85,6 +85,7 @@
     <Compile Include="ContactsService.cs" />
     <Compile Include="DateTimeService.cs" />
     <Compile Include="DialogsService.cs" />
+    <Compile Include="ConsoleTelegramUI.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
