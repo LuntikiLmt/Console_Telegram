@@ -301,8 +301,9 @@ namespace TeleWithVictorApi
                 using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\{fileName}"))
                 {
                     await fs.WriteAsync(bytes, 0, bytes.Length);
-                    //fs.Close();
+                    fs.Close();
                     Console.WriteLine($"{fileName} successfully installed in {fs.Name}");
+                    ImageToConsole.ShowImageToConsole(fs.Name);
                 }
             }
             catch (Exception e)
