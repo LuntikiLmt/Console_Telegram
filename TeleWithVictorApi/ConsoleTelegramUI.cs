@@ -192,6 +192,10 @@ namespace TeleWithVictorApi
                     ClearAndWrite(message.ToString());
                     _client.ReceivingService.UnreadMessages.Pop();
                 }
+                if (_client.DialogsService.Dialog == null)
+                {
+                    _client.DialogsService.FillDialogList();
+                }
             };
             _client.SendingService.OnSendMessage += message =>
             {

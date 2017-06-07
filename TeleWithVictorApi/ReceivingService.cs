@@ -34,11 +34,9 @@ namespace TeleWithVictorApi
 
         private async void Updates_RecieveUpdates(TlAbsUpdates update)
         {
-            if (!(update is TlUpdateShort))
-            {
-                update.MessageInfo(out int id, out string text, out DateTime time);
-                AddNewMessageToUnread(id, text, time);
-            }
+            int id = -1;
+            string text = String.Empty;
+            DateTime time = DateTime.Now;
             
             switch (update)
             {
@@ -59,7 +57,15 @@ namespace TeleWithVictorApi
                                 OnUpdateContacts?.Invoke();
                                 break;
 
+                            case TlUpdateNewChannelMessage updateNewChannelMessage:
+                                update.MessageInfo(out id, out text, out time);
+                                AddNewMessageToUnread(id, text, time);
+                                break;
+
                             case TlUpdateNewMessage updateNewMessage:
+                                update.MessageInfo(out id, out text, out time);
+                                AddNewMessageToUnread(id, text, time);
+
                                 Directory.CreateDirectory($"{Directory.GetCurrentDirectory()}\\Downloads");
 
                                 switch ((updateNewMessage.Message as TlMessage).Media)
@@ -95,6 +101,10 @@ namespace TeleWithVictorApi
                                 break;
                         }
                     }
+                    break;
+                case TlUpdateShortMessage _:
+                    update.MessageInfo(out id, out text, out time);
+                    AddNewMessageToUnread(id, text, time);
                     break;
             }
         }
