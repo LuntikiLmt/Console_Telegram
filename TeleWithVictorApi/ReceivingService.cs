@@ -34,8 +34,12 @@ namespace TeleWithVictorApi
 
         private async void Updates_RecieveUpdates(TlAbsUpdates update)
         {
-            update.MessageInfo(out int id, out string text, out DateTime time);
-            AddNewMessageToUnread(id, text, time);
+            if (!(update is TlUpdateShort))
+            {
+                update.MessageInfo(out int id, out string text, out DateTime time);
+                AddNewMessageToUnread(id, text, time);
+            }
+            
             switch (update)
             {
                 case TlUpdateShort _:

@@ -86,6 +86,7 @@ namespace TeleWithVictorApi
                     string mes = Message();
                     if (mes == null)
                     {
+                        _client.DialogsService.Dialog = null;
                         _client.DialogsService.FillDialogList();
                         break;
                     }
