@@ -78,7 +78,7 @@ namespace TeleWithVictorApi
 
         public static void ShowImageToConsole(string path)
         {
-            Point location = new Point(2, 5);
+            Point location = new Point(Console.CursorLeft, Console.CursorTop);
             Size imageSize = new Size(20, 10); // desired image size in characters
 
             // draw some placeholders
@@ -111,7 +111,8 @@ namespace TeleWithVictorApi
                     }
                 }
                 Console.SetCursorPosition(0, Console.CursorTop + 12);
-            }catch(InvalidOperationException e)
+            }
+            catch(InvalidOperationException e)
             {
                 //нельзя получить размер консоли
             }

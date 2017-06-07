@@ -304,13 +304,17 @@ namespace TeleWithVictorApi
                     await fs.WriteAsync(bytes, 0, bytes.Length);
                     fs.Close();
                     Console.WriteLine($"{fileName} successfully installed in {fs.Name}");
-                    ImageToConsole.ShowImageToConsole(fs.Name);
+                    //if (fileName.Contains(".png") || fileName.Contains(".jpg") || fileName.Contains(".jpeg"))
+                    //{
+                    //    ImageToConsole.ShowImageToConsole(fs.Name);
+                    //}
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine($"saving of {fileName} failed!");
             }
+            Console.Write("->");
         }
     }
 }

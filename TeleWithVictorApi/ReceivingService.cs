@@ -96,11 +96,6 @@ namespace TeleWithVictorApi
                         }
                     }
                     break;
-
-                default:
-                    Console.WriteLine($"Default: {update}");
-                    SystemSounds.Hand.Play();
-                    break;
             }
         }
 
