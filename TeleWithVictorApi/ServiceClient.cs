@@ -83,10 +83,10 @@ namespace TeleWithVictorApi
             ReceivingService = _ioc.Resolve<IReceivingService>();
             ReceivingService.OnUpdateDialogs += ReceivingService_OnUpdateDialogs;
             ReceivingService.OnUpdateContacts += ReceivingService_OnUpdateContacts;
-            SendingService.OnSendMessage += message =>
-            {
-                DialogsService.FillDialogList();
-            };
+            //SendingService.OnSendMessage += message =>
+            //{
+            //    DialogsService.FillDialogList();
+            //};
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();

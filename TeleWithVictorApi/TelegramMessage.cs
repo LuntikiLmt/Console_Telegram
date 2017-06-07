@@ -78,6 +78,11 @@ namespace TeleWithVictorApi
             return DateTimeService.TimeUnixToWindows(message.Date, isLocal);
         }
 
+        public static DateTime TimeUnixToWindows(this TlUpdateShortSentMessage message, bool isLocal)
+        {
+            return DateTimeService.TimeUnixToWindows(message.Date, isLocal);
+        }
+
         public static int GetSenderId(this TlMessage tlMessage)
         {
             int id = tlMessage.FromId ?? -1;

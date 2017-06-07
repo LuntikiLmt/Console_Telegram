@@ -29,7 +29,17 @@ namespace TeleWithVictorApi
         {
             TlAbsInputPeer receiver = await GetInputPeer(peer, receiverId);
             var update = await _client.SendMessageAsync(receiver, msg);
-            OnSendMessage?.Invoke(GetMessage(update));
+            IMessage message = null;
+            if (update is TlUpdateShortSentMessage)
+            {
+                message = _ioc.Resolve<IMessage>();
+                message.FillValues("You", msg, (update as TlUpdateShortSentMessage).TimeUnixToWindows(true));
+            }
+            else
+            {
+                message = GetMessage(update);
+            }
+            OnSendMessage?.Invoke(message);
         }
 
         public async Task SendFile(Peer peer, int receiverId, string path, string caption)

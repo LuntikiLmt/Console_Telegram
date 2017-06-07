@@ -69,26 +69,51 @@ namespace TeleWithVictorApi
 
             foreach (var message in history.Messages.Lists)
             {
-                string senderName = dialogName;
+                if (message is TlMessage)
+                {
+                    string senderName = dialogName;
 
-                if (_userId == message.FromId)
-                {
-                    senderName = "You";
-                }
-                else
-                {
-                    foreach (TlUser user in history.Users.Lists)
+                    if (_userId == message.FromId)
                     {
-                        if (user.Id == message.FromId)
+                        senderName = "You";
+                    }
+                    else
+                    {
+                        foreach (TlUser user in history.Users.Lists)
                         {
-                            senderName = $"{user.FirstName} {user.LastName}";
-                            break;
+                            if (user.Id == message.FromId)
+                            {
+                                senderName = $"{user.FirstName} {user.LastName}";
+                                break;
+                            }
                         }
                     }
+
+                    AddMsg(message, messages, senderName);
                 }
-                
-                AddMsg(message, messages, senderName);
             }
+            //foreach (var message in history.Messages.Lists)
+            //{
+            //    string senderName = dialogName;
+
+            //    if (_userId == message.FromId)
+            //    {
+            //        senderName = "You";
+            //    }
+            //    else
+            //    {
+            //        foreach (TlUser user in history.Users.Lists)
+            //        {
+            //            if (user.Id == message.FromId)
+            //            {
+            //                senderName = $"{user.FirstName} {user.LastName}";
+            //                break;
+            //            }
+            //        }
+            //    }
+                
+            //    AddMsg(message, messages, senderName);
+            //}
             Dialog.FillValues(dialogName, messages);
             Dialog.Id = dialogId;
         }

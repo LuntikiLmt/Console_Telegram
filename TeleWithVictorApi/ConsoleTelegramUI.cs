@@ -86,6 +86,7 @@ namespace TeleWithVictorApi
                     string mes = Message();
                     if (mes == null)
                     {
+                        _client.DialogsService.FillDialogList();
                         break;
                     }
                     if (mes == String.Empty)
@@ -202,11 +203,6 @@ namespace TeleWithVictorApi
         {
             GetReceiverInfo(index, isContact, out Peer peer, out int id, out string dialogTitle);
             await _client.SendingService.SendTextMessage(peer, id, text);
-            //может быть так, что создался новый диалог, поэтому нужно обновить список
-            if (_client.DialogsService.DialogList.FirstOrDefault(c => c.Id == id) == null)
-            {
-                _client.DialogsService.FillDialogList();
-            }
         }
 
         public async Task SendFile(int index, string path, string caption, bool isContact)
@@ -224,12 +220,6 @@ namespace TeleWithVictorApi
             catch (Exception e)
             {
                 Console.WriteLine("Sending failed! Try again");
-            }
-
-            //может быть так, что создался новый диалог, поэтому нужно обновить список
-            if (_client.DialogsService.DialogList.FirstOrDefault(c => c.Id == id) == null)
-            {
-                _client.DialogsService.FillDialogList();
             }
         }
 
