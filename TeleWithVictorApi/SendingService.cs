@@ -65,30 +65,31 @@ namespace TeleWithVictorApi
             int senderId = 0;
             string text = String.Empty;
             DateTime time = DateTime.Now;
-            switch (udAbsUpdates)
-            {
-                case TlUpdateShortMessage tlUpdateShortMessage:
-                    text = tlUpdateShortMessage.Message;
-                    time = tlUpdateShortMessage.TimeUnixToWindows(true);
-                    break;
-                case TlUpdates u:
-                    foreach (var item in u.Updates.Lists)
-                    {
-                        switch (item)
-                        {
-                            case TlUpdateNewMessage updateNewMessage:
-                                text = (updateNewMessage.Message as TlMessage).GetTextMessage();
-                                time = (updateNewMessage.Message as TlMessage).TimeUnixToWindows(true);
-                                break;
-                            case TlUpdateNewChannelMessage updateNewChannelMessage:
-                                text = (updateNewChannelMessage.Message as TlMessage)?.Message;
-                                time = (updateNewChannelMessage.Message as TlMessage).TimeUnixToWindows(true);
-                                break;
-                        }
-                    }
+            //switch (udAbsUpdates)
+            //{
+            //    case TlUpdateShortMessage tlUpdateShortMessage:
+            //        text = tlUpdateShortMessage.Message;
+            //        time = tlUpdateShortMessage.TimeUnixToWindows(true);
+            //        break;
+            //    case TlUpdates u:
+            //        foreach (var item in u.Updates.Lists)
+            //        {
+            //            switch (item)
+            //            {
+            //                case TlUpdateNewMessage updateNewMessage:
+            //                    text = (updateNewMessage.Message as TlMessage).GetTextMessage();
+            //                    time = (updateNewMessage.Message as TlMessage).TimeUnixToWindows(true);
+            //                    break;
+            //                case TlUpdateNewChannelMessage updateNewChannelMessage:
+            //                    text = (updateNewChannelMessage.Message as TlMessage).GetTextMessage();
+            //                    time = (updateNewChannelMessage.Message as TlMessage).TimeUnixToWindows(true);
+            //                    break;
+            //            }
+            //        }
 
-                    break;
-            }
+            //        break;
+            //}
+            udAbsUpdates.MessageInfo(out senderId, out text, out time);
             var message = _ioc.Resolve<IMessage>();
             message.FillValues("You", text, time);
             return message;

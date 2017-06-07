@@ -34,15 +34,14 @@ namespace TeleWithVictorApi
 
         private async void Updates_RecieveUpdates(TlAbsUpdates update)
         {
+            update.MessageInfo(out int id, out string text, out DateTime time);
+            AddNewMessageToUnread(id, text, time);
             switch (update)
             {
                 case TlUpdateShort _:
                     break;
 
                 case TlUpdates updates:
-                    int id;
-                    string text;
-                    DateTime time;
                     foreach (var item in updates.Updates.Lists)
                     {
                         switch (item)
@@ -56,22 +55,7 @@ namespace TeleWithVictorApi
                                 OnUpdateContacts?.Invoke();
                                 break;
 
-                            case TlUpdateNewChannelMessage updateNewChannelMessage:
-                                var tlMessage = updateNewChannelMessage.Message as TlMessage;
-                                text = tlMessage?.Message;
-                                time = tlMessage.TimeUnixToWindows(true);
-                                id = tlMessage.GetSenderId();
-                                
-                                AddNewMessageToUnread(id, text, time);
-                                
-                                break;
-
                             case TlUpdateNewMessage updateNewMessage:
-                                id = (updateNewMessage.Message as TlMessage).GetSenderId();
-                                text = (updateNewMessage.Message as TlMessage).GetTextMessage();
-                                time = (updateNewMessage.Message as TlMessage).TimeUnixToWindows(true);
-                                AddNewMessageToUnread(id, text, time);
-
                                 Directory.CreateDirectory($"{Directory.GetCurrentDirectory()}\\Downloads");
 
                                 switch ((updateNewMessage.Message as TlMessage).Media)
@@ -104,22 +88,10 @@ namespace TeleWithVictorApi
                                         ConsoleTelegramUI.WriteToFile(resFilePhoto.Bytes, photoName);
                                         break;
                                 }
-
-                                
                                 break;
                         }
                     }
                     break;
-
-                case TlUpdateShortMessage shortMessage:
-                    AddNewMessageToUnread(shortMessage.UserId, shortMessage.Message,
-                        shortMessage.TimeUnixToWindows(true));
-                    break;
-
-                //case TlUpdateShortChatMessage chatMessage:
-                //    //OnAddUnreadMessage(chatMessage.FromId, chatMessage.Message, DateTimeService.TimeUnixToWindows(chatMessage.Date, false), chatMessage.ChatId);
-                //    Console.WriteLine("asdas");
-                //    break;
 
                 default:
                     Console.WriteLine($"Default: {update}");

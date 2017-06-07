@@ -11,39 +11,59 @@ namespace TeleWithVictorApi
 {
     static class TelegramMessage
     {
-        public static async void LastMessage(ITelegramClient client)
+        public static void MessageInfo(this TlAbsUpdates update, out int senderId, out string text, out DateTime time)
         {
-            var dialogs = (TlDialogs)await client.GetUserDialogsAsync();
-            var dialog = dialogs.Dialogs.Lists[0];
-
-            string title;
-
-            switch (dialog.Peer)
+            senderId = -1;
+            text = null;
+            time = DateTime.Now;
+            switch (update)
             {
-                case TlPeerUser peerUser:
-                    var user = dialogs.Users.Lists
-                        .OfType<TlUser>()
-                        .FirstOrDefault(c => c.Id == peerUser.UserId);
-                    title = $"{user?.FirstName} {user?.LastName}";
+                case TlUpdateShort _:
                     break;
-                case TlPeerChannel peerChannel:
-                    var channel = dialogs.Chats.Lists
-                        .OfType<TlChannel>()
-                        .FirstOrDefault(c => c.Id == peerChannel.ChannelId);
-                    title = $"{channel.Title}";
+
+                case TlUpdates updates:
+                    foreach (var item in updates.Updates.Lists)
+                    {
+                        switch (item)
+                        {
+                            case TlUpdateDeleteMessages _:
+                                break;
+
+                            case TlUpdateContactLink _:
+                                break;
+
+                            case TlUpdateNewChannelMessage updateNewChannelMessage:
+                                var tlMessage = updateNewChannelMessage.Message as TlMessage;
+                                text = tlMessage.GetTextMessage();
+                                time = tlMessage.TimeUnixToWindows(true);
+                                senderId = tlMessage.GetSenderId();
+                                break;
+
+                            case TlUpdateNewMessage updateNewMessage:
+                                senderId = (updateNewMessage.Message as TlMessage).GetSenderId();
+                                text = (updateNewMessage.Message as TlMessage).GetTextMessage();
+                                time = (updateNewMessage.Message as TlMessage).TimeUnixToWindows(true);
+                                break;
+                        }
+                    }
                     break;
-                case TlPeerChat peerChat:
-                    var chat = dialogs.Chats.Lists
-                        .OfType<TlChat>()
-                        .FirstOrDefault(c => c.Id == peerChat.ChatId);
-                    title = $"{chat.Title}";
+
+                case TlUpdateShortMessage shortMessage:
+                    senderId = shortMessage.UserId;
+                    text = shortMessage.Message;
+                    time = shortMessage.TimeUnixToWindows(true);
                     break;
+
+                case TlUpdateShortChatMessage chatMessage:
+                    senderId = chatMessage.ChatId;
+                    text = chatMessage.Message;
+                    time = chatMessage.TimeUnixToWindows(true);
+                    break;
+
                 default:
-                    title = "Unknown sender";
                     break;
             }
         }
-
 
         public static string GetTextMessage(this TlMessage message)
         {
@@ -69,6 +89,11 @@ namespace TeleWithVictorApi
         }
 
         public static DateTime TimeUnixToWindows(this TlMessage message, bool isLocal)
+        {
+            return DateTimeService.TimeUnixToWindows(message.Date, isLocal);
+        }
+
+        public static DateTime TimeUnixToWindows(this TlUpdateShortChatMessage message, bool isLocal)
         {
             return DateTimeService.TimeUnixToWindows(message.Date, isLocal);
         }
