@@ -82,14 +82,14 @@ namespace TeleWithVictorApi
             Size imageSize = new Size(20, 10); // desired image size in characters
 
             // draw some placeholders
-            Console.SetCursorPosition(location.X - 1, location.Y);
-            Console.Write(">");
-            Console.SetCursorPosition(location.X + imageSize.Width, location.Y);
-            Console.Write("<");
-            Console.SetCursorPosition(location.X - 1, location.Y + imageSize.Height - 1);
-            Console.Write(">");
-            Console.SetCursorPosition(location.X + imageSize.Width, location.Y + imageSize.Height - 1);
-            Console.WriteLine("<");
+            //Console.SetCursorPosition(location.X - 1, location.Y);
+            //Console.Write(">");
+            //Console.SetCursorPosition(location.X + imageSize.Width, location.Y);
+            //Console.Write("<");
+            //Console.SetCursorPosition(location.X - 1, location.Y + imageSize.Height - 1);
+            //Console.Write(">");
+            //Console.SetCursorPosition(location.X + imageSize.Width, location.Y + imageSize.Height - 1);
+            //Console.WriteLine("<");
 
             //Console.WriteLine("Введи путь картинки: ");
             //string path = Console.ReadLine();
@@ -110,6 +110,7 @@ namespace TeleWithVictorApi
                         g.DrawImage(image, imageRect);
                     }
                 }
+                Console.SetCursorPosition(0, Console.CursorTop + 12);
             }catch(InvalidOperationException e)
             {
                 //нельзя получить размер консоли
