@@ -25,16 +25,16 @@ namespace TeleWithVictorApi
             _ioc = ioc;
         }
 
-        public async Task SendTextMessage(Peer peer, int id, string msg)
+        public async Task SendTextMessage(Peer peer, int receiverId, string msg)
         {
-            TlAbsInputPeer receiver = await GetInputPeer(peer, id);
-            await _client.SendMessageAsync(receiver, msg);
-            var message = _ioc.Resolve<IMessage>();
+            TlAbsInputPeer receiver = await GetInputPeer(peer, receiverId);
+            var update = await _client.SendMessageAsync(receiver, msg);
+            OnSendMessage?.Invoke(GetMessage(update));
         }
 
-        public async Task SendFile(Peer peer, int id, string path, string caption)
+        public async Task SendFile(Peer peer, int receiverId, string path, string caption)
         {
-            var receiver = await GetInputPeer(peer, id);
+            var receiver = await GetInputPeer(peer, receiverId);
             path = path.Trim('"');
             var str = path.Split('\\');
             using (var stream = new FileStream(path, FileMode.Open))
@@ -45,9 +45,43 @@ namespace TeleWithVictorApi
                 var attr = new TlVector<TlAbsDocumentAttribute>();
                 var filename = new TlDocumentAttributeFilename { FileName = str[str.Length - 1] };
                 attr.Lists.Add(filename);
-                await _client.SendUploadedDocument(receiver, fileResult, caption, String.Empty, attr);
-
+                var update = await _client.SendUploadedDocument(receiver, fileResult, caption, String.Empty, attr);
+                OnSendMessage?.Invoke(GetMessage(update));
             }
+        }
+
+        private IMessage GetMessage(TlAbsUpdates udAbsUpdates)
+        {
+            int senderId = 0;
+            string text = String.Empty;
+            DateTime time = DateTime.Now;
+            switch (udAbsUpdates)
+            {
+                case TlUpdateShortMessage tlUpdateShortMessage:
+                    text = tlUpdateShortMessage.Message;
+                    time = tlUpdateShortMessage.TimeUnixToWindows(true);
+                    break;
+                case TlUpdates u:
+                    foreach (var item in u.Updates.Lists)
+                    {
+                        switch (item)
+                        {
+                            case TlUpdateNewMessage updateNewMessage:
+                                text = (updateNewMessage.Message as TlMessage).GetTextMessage();
+                                time = (updateNewMessage.Message as TlMessage).TimeUnixToWindows(true);
+                                break;
+                            case TlUpdateNewChannelMessage updateNewChannelMessage:
+                                text = (updateNewChannelMessage.Message as TlMessage)?.Message;
+                                time = (updateNewChannelMessage.Message as TlMessage).TimeUnixToWindows(true);
+                                break;
+                        }
+                    }
+
+                    break;
+            }
+            var message = _ioc.Resolve<IMessage>();
+            message.FillValues("You", text, time);
+            return message;
         }
 
         private async Task<TlAbsInputPeer> GetInputPeer(Peer peer, int id)

@@ -36,23 +36,22 @@ namespace TeleWithVictorApi
         {
             switch (update)
             {
-                case TlUpdateShort updateShort:
+                case TlUpdateShort _:
                     break;
 
                 case TlUpdates updates:
                     int id;
                     string text;
                     DateTime time;
-                    SystemSounds.Beep.Play();
                     foreach (var item in updates.Updates.Lists)
                     {
                         switch (item)
                         {
-                            case TlUpdateDeleteMessages updateDeleteMessages:
+                            case TlUpdateDeleteMessages _:
                                 OnUpdateDialogs?.Invoke();
                                 break;
 
-                            case TlUpdateContactLink updateContactLink:
+                            case TlUpdateContactLink _:
                                 OnUpdateDialogs?.Invoke();
                                 OnUpdateContacts?.Invoke();
                                 break;
@@ -60,18 +59,17 @@ namespace TeleWithVictorApi
                             case TlUpdateNewChannelMessage updateNewChannelMessage:
                                 var tlMessage = updateNewChannelMessage.Message as TlMessage;
                                 text = tlMessage?.Message;
-                                time =
-                                    DateTimeService.TimeUnixToWindows(tlMessage.Date, true);
-                                id = GetId(tlMessage);
+                                time = tlMessage.TimeUnixToWindows(true);
+                                id = tlMessage.GetSenderId();
                                 
                                 AddNewMessageToUnread(id, text, time);
                                 
                                 break;
 
                             case TlUpdateNewMessage updateNewMessage:
-                                id = GetId(updateNewMessage.Message as TlMessage);
-                                text = DialogsService.GetTitleFromFile(updateNewMessage.Message as TlMessage);
-                                time = DateTimeService.TimeUnixToWindows((updateNewMessage.Message as TlMessage).Date, true);
+                                id = (updateNewMessage.Message as TlMessage).GetSenderId();
+                                text = (updateNewMessage.Message as TlMessage).GetTextMessage();
+                                time = (updateNewMessage.Message as TlMessage).TimeUnixToWindows(true);
                                 AddNewMessageToUnread(id, text, time);
 
                                 Directory.CreateDirectory($"{Directory.GetCurrentDirectory()}\\Downloads");
@@ -99,7 +97,7 @@ namespace TeleWithVictorApi
                                         var tf = (TlFileLocation)photoInfo.Location;
                                         var resFilePhoto = await _client.GetFile(new TlInputFileLocation { LocalId = tf.LocalId, Secret = tf.Secret, VolumeId = tf.VolumeId}, 0);
 
-                                        var date = DateTimeService.TimeUnixToWindows((updateNewMessage.Message as TlMessage).Date, true).ToString();
+                                        var date = (updateNewMessage.Message as TlMessage).TimeUnixToWindows(true).ToString();
                                         date = date.Replace(':', '-');
                                         string photoName = $"ConsoleTelegram_{date}.png";
 
@@ -114,9 +112,8 @@ namespace TeleWithVictorApi
                     break;
 
                 case TlUpdateShortMessage shortMessage:
-                    Console.Beep();
                     AddNewMessageToUnread(shortMessage.UserId, shortMessage.Message,
-                        DateTimeService.TimeUnixToWindows(shortMessage.Date, true));
+                        shortMessage.TimeUnixToWindows(true));
                     break;
 
                 //case TlUpdateShortChatMessage chatMessage:
@@ -129,28 +126,6 @@ namespace TeleWithVictorApi
                     SystemSounds.Hand.Play();
                     break;
             }
-        }
-
-        private int GetId(TlMessage tlMessage)
-        {
-            int id = tlMessage.FromId ?? -1;
-            if (id == -1)
-            {
-                var receiver = tlMessage.ToId;
-                switch (receiver)
-                {
-                    case TlPeerChannel channel:
-                        id = channel.ChannelId;
-                        break;
-                    case TlPeerChat chat:
-                        id = chat.ChatId;
-                        break;
-                    case TlPeerUser user:
-                        id = user.UserId;
-                        break;
-                }
-            }
-            return id;
         }
 
         private async Task AddNewMessageToUnread(int senderId, string text, DateTime dateTime)
@@ -184,7 +159,7 @@ namespace TeleWithVictorApi
 
             var message = _ioc.Resolve<IMessage>();
             
-            message.Fill(title, text, dateTime);
+            message.FillValues(title, text, dateTime);
             UnreadMessages.Push(message);
             OnAddUnreadMessage?.Invoke(senderId, message);
         }

@@ -29,7 +29,34 @@ namespace TeleWithVictorApi
         public ConsoleTelegramUI(SimpleIoC ioc)
         {
             _client = ioc.Resolve<IServiceTl>();
+        }
 
+        public void Start()
+        {
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                eventArgs.Cancel = true;
+            };
+
+            if (!_client.IsUserAuthorized)
+            {
+                Console.WriteLine("You need to authorize first.");
+                return;
+            }
+            bool isRun = true;
+            while (isRun)
+            {
+                Console.Write("\n->");
+                var line = Console.ReadLine()?.Split(' ');
+                var parseResult = Parser.Default.ParseArguments<PrintOptions, AddContactOptions, DeleteContactOptions, EnterDialogOptions, Quit>(line ?? new[] { "", "" });
+
+                parseResult.
+                    WithParsed<Quit>(quit => isRun = false).
+                    WithParsed<PrintOptions>(Print).
+                    WithParsed<EnterDialogOptions>(Enter).
+                    WithParsed<DeleteContactOptions>(async opt => await _client.ContactsService.DeleteContact(opt.Index)).
+                    WithParsed<AddContactOptions>(async opt => await _client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number));
+            }
         }
 
         private void Print(PrintOptions opt)
@@ -83,35 +110,7 @@ namespace TeleWithVictorApi
             }
         }
 
-        public void Start()
-        {
-            Console.CancelKeyPress += (sender, eventArgs) =>
-            {
-                eventArgs.Cancel = true;
-            };
-
-            if (!_client.IsUserAuthorized)
-            {
-                Console.WriteLine("You need to authorize first.");
-                return;
-            }
-            bool isRun = true;
-            while (isRun)
-            {
-                Console.Write("\n->");
-                var line = Console.ReadLine()?.Split(' ');
-                var parseResult = Parser.Default.ParseArguments<PrintOptions, AddContactOptions, DeleteContactOptions, EnterDialogOptions, Quit>(line ?? new []{"",""});
-
-                parseResult.
-                    WithParsed<Quit>(quit => isRun = false).
-                    WithParsed<PrintOptions>(Print).
-                    WithParsed<EnterDialogOptions>(Enter).
-                    WithParsed<DeleteContactOptions>(async opt => await _client.ContactsService.DeleteContact(opt.Index)).
-                    WithParsed<AddContactOptions>(async opt => await _client.ContactsService.AddContact(opt.FirstName, opt.LastName, opt.Number));
-            }
-        }
-
-        public string Message()
+        private string Message()
         {
             string temp = String.Empty;
             ConsoleKeyInfo cki;
@@ -150,6 +149,16 @@ namespace TeleWithVictorApi
             return temp;
         }
 
+        private void ClearAndWrite(string message)
+        {
+            foreach (var _ in textBuffer)
+            {
+                Console.Write('\b');
+            }
+            Console.WriteLine(message);
+            Console.Write(textBuffer.ToArray());
+        }
+
         public void Authorize()
         {
             if (!_client.Authorize())
@@ -175,43 +184,24 @@ namespace TeleWithVictorApi
             _client.FillAsync();
             _client.ReceivingService.OnAddUnreadMessage += (senderId, message) =>
             {
+                Console.Beep();
                 if (_client.DialogsService.Dialog?.Id == senderId)
                 {
-                    //Console.Write('\b');
-                    foreach (var ch in textBuffer)
-                    {
-                        Console.Write('\b');
-                    }
-                    Console.WriteLine(message);
-                    Console.Write(textBuffer.ToArray());
+                    ClearAndWrite(message.ToString());
                     _client.ReceivingService.UnreadMessages.Pop();
                 }
+            };
+            _client.SendingService.OnSendMessage += message =>
+            {
+                Console.Beep();
+                ClearAndWrite(message.ToString());
             };
         }
 
         public async Task SendTextMessage(int index, string text, bool isContact)
         {
-            Peer peer;
-            int id;
-            string dialogTitle;
-            if (isContact)
-            {
-                var contact = _client.ContactsService.Contacts.ElementAt(index);
-                peer = Peer.User;
-                id = contact.Id;
-                dialogTitle = contact.ToString();
-            }
-            else
-            {
-                var dialog = _client.DialogsService.DialogList.ElementAt(index);
-                peer = dialog.Peer;
-                id = dialog.Id;
-                dialogTitle = dialog.DialogName;
-            }
+            GetReceiverInfo(index, isContact, out Peer peer, out int id, out string dialogTitle);
             await _client.SendingService.SendTextMessage(peer, id, text);
-            await _client.DialogsService.FillDialog(dialogTitle, peer, id);
-            int count = _client.DialogsService.Dialog.Messages.Count();
-            Console.WriteLine(_client.DialogsService.Dialog.Messages.ElementAt(count - 1));
             //может быть так, что создался новый диалог, поэтому нужно обновить список
             if (_client.DialogsService.DialogList.FirstOrDefault(c => c.Id == id) == null)
             {
@@ -219,61 +209,13 @@ namespace TeleWithVictorApi
             }
         }
 
-        public async Task PrintDialogMessages(int index, bool isContact)
-        {
-            string dialogTitle;
-            Peer peer;
-            int id;
-            if (isContact)
-            {
-                var contact = _client.ContactsService.Contacts.ElementAt(index);
-                dialogTitle = contact.ToString();
-                peer = Peer.User;
-                id = contact.Id;
-            }
-            else
-            {
-                var dlg = _client.DialogsService.DialogList.ElementAt(index);
-                dialogTitle = dlg.DialogName;
-                peer = dlg.Peer;
-                id = dlg.Id;
-            }
-
-            await _client.DialogsService.FillDialog(dialogTitle, peer, id);
-            Console.Clear();
-            Console.WriteLine($"{_client.DialogsService.Dialog.DialogName}");
-            foreach (var item in _client.DialogsService.Dialog.Messages)
-            {
-                Console.WriteLine(item);
-            }
-        }
-
         public async Task SendFile(int index, string path, string caption, bool isContact)
         {
-            Peer peer;
-            int id;
-            string dialogTitle;
-            if (isContact)
-            {
-                var contact = _client.ContactsService.Contacts.ElementAt(index);
-                peer = Peer.User;
-                id = contact.Id;
-                dialogTitle = contact.ToString();
-            }
-            else
-            {
-                var dialog = _client.DialogsService.DialogList.ElementAt(index);
-                peer = dialog.Peer;
-                id = dialog.Id;
-                dialogTitle = dialog.DialogName;
-            }
+            GetReceiverInfo(index, isContact, out Peer peer, out int id, out string dialogTitle);
             try
             {
                 await _client.SendingService.SendFile(peer, id, path, caption);
                 Console.WriteLine("File otpravlen");
-                await _client.DialogsService.FillDialog(dialogTitle, peer, id);
-                int count = _client.DialogsService.Dialog.Messages.Count();
-                Console.WriteLine(_client.DialogsService.Dialog.Messages.ElementAt(count - 1));
             }
             catch (ArgumentException e)
             {
@@ -283,11 +225,41 @@ namespace TeleWithVictorApi
             {
                 Console.WriteLine("Sending failed! Try again");
             }
-            
+
             //может быть так, что создался новый диалог, поэтому нужно обновить список
             if (_client.DialogsService.DialogList.FirstOrDefault(c => c.Id == id) == null)
             {
                 _client.DialogsService.FillDialogList();
+            }
+        }
+
+        private void GetReceiverInfo(int index, bool isContact, out Peer peer, out int id, out string dialogTitle)
+        {
+            if (isContact)
+            {
+                var contact = _client.ContactsService.Contacts.ElementAt(index);
+                peer = Peer.User;
+                id = contact.Id;
+                dialogTitle = contact.ToString();
+            }
+            else
+            {
+                var dialog = _client.DialogsService.DialogList.ElementAt(index);
+                peer = dialog.Peer;
+                id = dialog.Id;
+                dialogTitle = dialog.DialogName;
+            }
+        }
+
+        public async Task PrintDialogMessages(int index, bool isContact)
+        {
+            GetReceiverInfo(index, isContact, out Peer peer, out int id, out string dialogTitle);
+            await _client.DialogsService.FillDialog(dialogTitle, peer, id);
+            Console.Clear();
+            Console.WriteLine($"{_client.DialogsService.Dialog.DialogName}");
+            foreach (var item in _client.DialogsService.Dialog.Messages)
+            {
+                Console.WriteLine(item);
             }
         }
 
@@ -302,9 +274,8 @@ namespace TeleWithVictorApi
             }
         }
 
-        public async void PrintDialogs()
+        public void PrintDialogs()
         {
-            await _client.DialogsService.FillDialogList();
             int index = 0;
             Console.WriteLine("\nDialogs:");
             foreach (var item in _client.DialogsService.DialogList)
@@ -340,7 +311,7 @@ namespace TeleWithVictorApi
                 using (FileStream fs = File.Create($"{Directory.GetCurrentDirectory()}\\Downloads\\{fileName}"))
                 {
                     await fs.WriteAsync(bytes, 0, bytes.Length);
-                    fs.Close();
+                    //fs.Close();
                     Console.WriteLine($"{fileName} successfully installed in {fs.Name}");
                 }
             }

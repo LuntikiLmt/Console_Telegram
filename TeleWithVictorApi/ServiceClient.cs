@@ -13,8 +13,8 @@ namespace TeleWithVictorApi
     {
         private readonly ITelegramClient _client;
         private readonly SimpleIoC _ioc;
-        private string _phoneNumber = null;
-        private string _hash = null;
+        private string _phoneNumber;
+        private string _hash;
 
         public IContactsService ContactsService { get; private set; }
         public IDialogsService DialogsService { get; private set; }
@@ -51,7 +51,13 @@ namespace TeleWithVictorApi
         {
             try
             {
-                await _client.MakeAuthAsync(_phoneNumber, _hash, code);
+                TlUser tlUser = await _client.MakeAuthAsync(_phoneNumber, _hash, code);
+                var file = File.OpenWrite("userId.txt");
+                using (StreamWriter sw = new StreamWriter(file))
+                {
+                    sw.Write(tlUser.Id);
+                }
+                file.Dispose();
                 return true;
             }
             catch (Exception e)
@@ -77,17 +83,21 @@ namespace TeleWithVictorApi
             ReceivingService = _ioc.Resolve<IReceivingService>();
             ReceivingService.OnUpdateDialogs += ReceivingService_OnUpdateDialogs;
             ReceivingService.OnUpdateContacts += ReceivingService_OnUpdateContacts;
+            SendingService.OnSendMessage += message =>
+            {
+                DialogsService.FillDialogList();
+            };
 
             await ContactsService.FillContacts();
             await DialogsService.FillDialogList();
         }
 
-        private void ReceivingService_OnAddUnreadMessageFromChannel(string title, string text, DateTime dateTime)
-        {
-            var message = _ioc.Resolve<IMessage>();
-            message.Fill(title, text, dateTime);
-            ReceivingService.UnreadMessages.Push(message);
-        }
+        //private void ReceivingService_OnAddUnreadMessageFromChannel(string title, string text, DateTime dateTime)
+        //{
+        //    var message = _ioc.Resolve<IMessage>();
+        //    message.FillValues(title, text, dateTime);
+        //    ReceivingService.UnreadMessages.Push(message);
+        //}
 
         //private void ReceivingService_OnAddUnreadMessage(int id, string text, DateTime dateTime,  int? chatId)
         //{
