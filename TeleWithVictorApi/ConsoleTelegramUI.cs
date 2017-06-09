@@ -78,7 +78,7 @@ namespace TeleWithVictorApi
         private void Enter(EnterDialogOptions opt)
         {
             try
-            {
+            { 
                 PrintDialogMessages(opt.Index, opt.IsContact).Wait();
                 while (true)
                 {
@@ -106,7 +106,7 @@ namespace TeleWithVictorApi
                     }
                 }
             }
-            catch (ArgumentOutOfRangeException e)
+            catch (Exception e)
             {
                 Console.WriteLine("Number is incorrect!");
             }

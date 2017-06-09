@@ -52,12 +52,11 @@ namespace TeleWithVictorApi
             try
             {
                 TlUser tlUser = await _client.MakeAuthAsync(_phoneNumber, _hash, code);
-                var file = File.OpenWrite("userId.txt");
-                using (StreamWriter sw = new StreamWriter(file))
-                {
-                    sw.Write(tlUser.Id);
-                }
-                file.Dispose();
+                using (var file = File.OpenWrite("userId.txt"))
+                    using (StreamWriter sw = new StreamWriter(file))
+                    {
+                        sw.Write(tlUser.Id);
+                    }
                 return true;
             }
             catch (Exception e)
